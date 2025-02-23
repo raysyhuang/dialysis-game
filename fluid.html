@@ -460,6 +460,132 @@
             padding: 20px;
             font-style: italic;
         }
+
+        /* Mobile optimizations */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .game-header h1 {
+                font-size: 28px;
+            }
+
+            .subtitle {
+                font-size: 15px;
+            }
+
+            .water-container {
+                width: 80%;
+                height: 200px;
+            }
+
+            .food-fluid-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .back-button {
+                position: static;
+                margin-bottom: 20px;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .settings-button {
+                position: static;
+                margin-bottom: 10px;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .fluid-history-item {
+                font-size: 14px;
+            }
+
+            .tip-item {
+                font-size: 14px;
+            }
+        }
+
+        /* Tablet optimizations */
+        @media (min-width: 481px) and (max-width: 1023px) {
+            .food-fluid-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .water-container {
+                width: 70%;
+            }
+        }
+
+        /* Desktop enhancements */
+        @media (min-width: 1024px) {
+            .game-container {
+                max-width: 1000px;
+                margin: 20px auto;
+                padding: 32px;
+            }
+
+            .food-fluid-list {
+                grid-template-columns: repeat(6, 1fr);
+            }
+
+            .water-container {
+                width: 50%;
+                max-width: 300px;
+            }
+
+            .fluid-info-card, 
+            .symptom-checker, 
+            .tips-container {
+                transition: transform 0.2s ease;
+            }
+
+            .fluid-info-card:hover, 
+            .symptom-checker:hover, 
+            .tips-container:hover {
+                transform: translateY(-2px);
+            }
+
+            .game-header {
+                margin-top: 40px;
+            }
+        }
+
+        /* Layout improvements */
+        .content-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        @media (min-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        /* Touch device optimizations */
+        @media (hover: none) {
+            .food-item:hover {
+                transform: none;
+            }
+
+            .food-item:active {
+                background: var(--card-background);
+            }
+        }
+
+        /* Improved accessibility */
+        .food-item, 
+        .drink-button, 
+        .settings-button {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Better scrolling on mobile */
+        .fluid-history-list {
+            -webkit-overflow-scrolling: touch;
+        }
     </style>
 </head>
 <body>
@@ -499,81 +625,87 @@
     </div>
 
     <div class="game-container">
-        <div class="water-container">
-            <div class="water-fill" id="waterFill"></div>
-            <div class="water-level-text">
-                <span id="currentAmount">0</span>ml / <span id="dailyLimit">1000</span>ml
-            </div>
-        </div>
+        <div class="content-grid">
+            <div class="main-content">
+                <div class="water-container">
+                    <div class="water-fill" id="waterFill"></div>
+                    <div class="water-level-text">
+                        <span id="currentAmount">0</span>ml / <span id="dailyLimit">1000</span>ml
+                    </div>
+                </div>
 
-        <div class="fluid-history-card">
-            <h3>今日液体摄入记录 📝</h3>
-            <div id="fluidHistory" class="fluid-history-list">
-                <!-- History items will be added here dynamically -->
-            </div>
-        </div>
+                <div class="fluid-history-card">
+                    <h3>今日液体摄入记录 📝</h3>
+                    <div id="fluidHistory" class="fluid-history-list">
+                        <!-- History items will be added here dynamically -->
+                    </div>
+                </div>
 
-        <div id="message"></div>
+                <div id="message"></div>
+            </div>
+            
+            <div class="side-content">
+                <div class="fluid-info-card">
+                    <h3>常见食物液体含量 💧</h3>
+                    <div class="food-fluid-list">
+                        <div class="food-item" data-amount="200" data-name="饮料/水">
+                            <span>🥤</span>
+                            <p>饮料/水 (200ml)</p>
+                        </div>
+                        <div class="food-item" data-amount="100" data-name="汤类">
+                            <span>🍜</span>
+                            <p>汤类 (100ml)</p>
+                        </div>
+                        <div class="food-item" data-amount="80" data-name="西瓜片">
+                            <span>🍉</span>
+                            <p>西瓜片 (80ml)</p>
+                        </div>
+                        <div class="food-item" data-amount="50" data-name="橙子">
+                            <span>🍊</span>
+                            <p>橙子 (50ml)</p>
+                        </div>
+                        <div class="food-item" data-amount="30" data-name="苹果">
+                            <span>🍎</span>
+                            <p>苹果 (30ml)</p>
+                        </div>
+                        <div class="food-item" data-amount="40" data-name="葡萄">
+                            <span>🍇</span>
+                            <p>葡萄 (40ml)</p>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="fluid-info-card">
-            <h3>常见食物液体含量 💧</h3>
-            <div class="food-fluid-list">
-                <div class="food-item" data-amount="200" data-name="饮料/水">
-                    <span>🥤</span>
-                    <p>饮料/水 (200ml)</p>
+                <div class="symptom-checker">
+                    <h3>⚠️ 液体摄入过量警示</h3>
+                    <div class="tip-item">
+                        <span>👀</span> 眼睑浮肿
+                    </div>
+                    <div class="tip-item">
+                        <span>👣</span> 脚踝水肿
+                    </div>
+                    <div class="tip-item">
+                        <span>⚖️</span> 体重快速增加
+                    </div>
+                    <div class="tip-item">
+                        <span>😮‍💨</span> 呼吸困难
+                    </div>
                 </div>
-                <div class="food-item" data-amount="100" data-name="汤类">
-                    <span>🍜</span>
-                    <p>汤类 (100ml)</p>
-                </div>
-                <div class="food-item" data-amount="80" data-name="西瓜片">
-                    <span>🍉</span>
-                    <p>西瓜片 (80ml)</p>
-                </div>
-                <div class="food-item" data-amount="50" data-name="橙子">
-                    <span>🍊</span>
-                    <p>橙子 (50ml)</p>
-                </div>
-                <div class="food-item" data-amount="30" data-name="苹果">
-                    <span>🍎</span>
-                    <p>苹果 (30ml)</p>
-                </div>
-                <div class="food-item" data-amount="40" data-name="葡萄">
-                    <span>🍇</span>
-                    <p>葡萄 (40ml)</p>
-                </div>
-            </div>
-        </div>
 
-        <div class="symptom-checker">
-            <h3>⚠️ 液体摄入过量警示</h3>
-            <div class="tip-item">
-                <span>👀</span> 眼睑浮肿
-            </div>
-            <div class="tip-item">
-                <span>👣</span> 脚踝水肿
-            </div>
-            <div class="tip-item">
-                <span>⚖️</span> 体重快速增加
-            </div>
-            <div class="tip-item">
-                <span>😮‍💨</span> 呼吸困难
-            </div>
-        </div>
-
-        <div class="tips-container">
-            <h3>健康管理小贴士 💡</h3>
-            <div class="tip-item">
-                <span>📏</span> 每天称重并记录，控制两次透析间体重增长不超过干重的5%
-            </div>
-            <div class="tip-item">
-                <span>🧊</span> 含冰块咀嚼可缓解口渴（计入液体量）
-            </div>
-            <div class="tip-item">
-                <span>🍬</span> 可以用柠檬片或硬糖缓解口渴
-            </div>
-            <div class="tip-item">
-                <span>🧂</span> 控制钠盐摄入可减少口渴感
+                <div class="tips-container">
+                    <h3>健康管理小贴士 💡</h3>
+                    <div class="tip-item">
+                        <span>📏</span> 每天称重并记录，控制两次透析间体重增长不超过干重的5%
+                    </div>
+                    <div class="tip-item">
+                        <span>🧊</span> 含冰块咀嚼可缓解口渴（计入液体量）
+                    </div>
+                    <div class="tip-item">
+                        <span>🍬</span> 可以用柠檬片或硬糖缓解口渴
+                    </div>
+                    <div class="tip-item">
+                        <span>🧂</span> 控制钠盐摄入可减少口渴感
+                    </div>
+                </div>
             </div>
         </div>
 

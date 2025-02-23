@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>透析营养知识问答</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         :root {
             --system-gray: #8E8E93;
@@ -254,6 +255,66 @@
         @keyframes slideIn {
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Improved mobile responsiveness */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .game-header h1 {
+                font-size: 28px;
+            }
+
+            .subtitle {
+                font-size: 15px;
+            }
+
+            .question {
+                font-size: 16px;
+            }
+
+            .option {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .back-button {
+                position: static;
+                margin-bottom: 20px;
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Desktop enhancements */
+        @media (min-width: 1024px) {
+            .quiz-container {
+                max-width: 800px;
+                margin: 20px auto;
+                padding: 32px;
+            }
+
+            .option:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .game-header {
+                margin-top: 40px;
+            }
+        }
+
+        /* Touch device optimizations */
+        @media (hover: none) {
+            .option:hover {
+                transform: none;
+            }
+
+            .option:active {
+                background: var(--card-background);
+            }
         }
     </style>
 </head>
