@@ -551,13 +551,13 @@
         .food-card {
             background: var(--system-background);
             border-radius: 16px;
-            padding: 16px;
+            padding: 20px;
             cursor: pointer;
             transition: all 0.3s;
             position: relative;
             display: flex;
-            align-items: center;
             gap: 12px;
+            align-items: flex-start;
         }
 
         .food-icon {
@@ -573,6 +573,7 @@
 
         .food-info {
             flex: 1;
+            min-width: 0;
         }
 
         .food-name {
@@ -629,7 +630,7 @@
             }
 
             .food-card {
-                padding: 12px;
+                padding: 16px;
             }
 
             .food-icon {
@@ -637,6 +638,146 @@
                 width: 36px;
                 height: 36px;
             }
+        }
+
+        .nutrient-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 16px;
+        }
+
+        .nutrient-bar-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .nutrient-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: white;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease, background-color 0.3s ease;
+            border-radius: 6px;
+        }
+
+        .target-zone {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            border-left: 2px dashed rgba(255, 255, 255, 0.3);
+            border-right: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .nutrient-bars {
+                padding: 12px;
+            }
+
+            .nutrient-bar-item {
+                padding: 10px;
+            }
+
+            .nutrient-label {
+                font-size: 10px;
+            }
+        }
+
+        .nutrient-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .mini-bar-container {
+            width: 100%;
+        }
+
+        .mini-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .mini-progress-bar {
+            height: 4px;
+            background: var(--card-background);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .mini-progress-fill {
+            height: 100%;
+            background: var(--system-blue);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* Hover effect for the progress bars */
+        .food-card:hover .mini-progress-fill {
+            background: var(--system-green);
+        }
+
+        @media (max-width: 768px) {
+            .food-card {
+                padding: 16px;
+            }
+            
+            .mini-bar-label {
+                font-size: 10px;
+            }
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            margin-left: 8px;
+            border-radius: 4px;
+        }
+
+        .delete-btn:hover {
+            opacity: 1;
+            background: rgba(255, 59, 48, 0.1);
+        }
+
+        .food-name {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Update existing food-card hover style */
+        .food-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .food-card.selected {
+            border: 2px solid var(--system-green);
+            background: rgba(52, 199, 89, 0.05);
         }
     </style>
 </head>
@@ -690,43 +831,107 @@
     </div>
 
     <script>
-        // Define food database with proper icons and categories
+        // Update the foodDatabase with more options
         const foodDatabase = {
             protein: [
                 { id: 1, name: '鸡胸肉', icon: '🍗', category: 'protein', protein: 30, phosphorus: 200, potassium: 300, sodium: 70 },
                 { id: 2, name: '鱼肉', icon: '🐟', category: 'protein', protein: 25, phosphorus: 180, potassium: 250, sodium: 60 },
-                { id: 3, name: '豆腐', icon: '🧊', category: 'protein', protein: 15, phosphorus: 120, potassium: 150, sodium: 40 }
+                { id: 3, name: '豆腐', icon: '🧊', category: 'protein', protein: 15, phosphorus: 120, potassium: 150, sodium: 40 },
+                { id: 4, name: '瘦猪肉', icon: '🥩', category: 'protein', protein: 28, phosphorus: 190, potassium: 270, sodium: 65 },
+                { id: 5, name: '鸡蛋', icon: '🥚', category: 'protein', protein: 13, phosphorus: 150, potassium: 130, sodium: 35 },
+                { id: 6, name: '虾仁', icon: '🦐', category: 'protein', protein: 20, phosphorus: 170, potassium: 200, sodium: 55 }
             ],
             vegetable: [
-                { id: 4, name: '西兰花', icon: '🥦', category: 'vegetable', protein: 5, phosphorus: 80, potassium: 200, sodium: 30 },
-                { id: 5, name: '胡萝卜', icon: '🥕', category: 'vegetable', protein: 2, phosphorus: 40, potassium: 150, sodium: 20 },
-                { id: 6, name: '生菜', icon: '🥬', category: 'vegetable', protein: 1, phosphorus: 30, potassium: 100, sodium: 10 }
+                { id: 7, name: '西兰花', icon: '🥦', category: 'vegetable', protein: 5, phosphorus: 80, potassium: 200, sodium: 30 },
+                { id: 8, name: '胡萝卜', icon: '🥕', category: 'vegetable', protein: 2, phosphorus: 40, potassium: 150, sodium: 20 },
+                { id: 9, name: '生菜', icon: '🥬', category: 'vegetable', protein: 1, phosphorus: 30, potassium: 100, sodium: 10 },
+                { id: 10, name: '青椒', icon: '🫑', category: 'vegetable', protein: 2, phosphorus: 35, potassium: 120, sodium: 15 },
+                { id: 11, name: '茄子', icon: '🍆', category: 'vegetable', protein: 3, phosphorus: 45, potassium: 140, sodium: 25 },
+                { id: 12, name: '番茄', icon: '🍅', category: 'vegetable', protein: 2, phosphorus: 35, potassium: 130, sodium: 20 },
+                { id: 13, name: '南瓜', icon: '🎃', category: 'vegetable', protein: 3, phosphorus: 40, potassium: 160, sodium: 15 }
             ],
             grain: [
-                { id: 7, name: '米饭', icon: '🍚', category: 'grain', protein: 8, phosphorus: 100, potassium: 80, sodium: 5 },
-                { id: 8, name: '全麦面包', icon: '🍞', category: 'grain', protein: 10, phosphorus: 90, potassium: 100, sodium: 15 },
-                { id: 9, name: '燕麦', icon: '🥣', category: 'grain', protein: 12, phosphorus: 110, potassium: 120, sodium: 8 }
+                { id: 14, name: '米饭', icon: '🍚', category: 'grain', protein: 8, phosphorus: 100, potassium: 80, sodium: 5 },
+                { id: 15, name: '全麦面包', icon: '🍞', category: 'grain', protein: 10, phosphorus: 90, potassium: 100, sodium: 15 },
+                { id: 16, name: '燕麦', icon: '🥣', category: 'grain', protein: 12, phosphorus: 110, potassium: 120, sodium: 8 },
+                { id: 17, name: '玉米', icon: '🌽', category: 'grain', protein: 9, phosphorus: 95, potassium: 90, sodium: 10 },
+                { id: 18, name: '馒头', icon: '🥖', category: 'grain', protein: 7, phosphorus: 85, potassium: 70, sodium: 12 },
+                { id: 19, name: '薯片', icon: '🥔', category: 'grain', protein: 6, phosphorus: 80, potassium: 85, sodium: 20 }
             ]
         };
 
         let selectedFoods = [];
         let currentCategory = 'all';
 
-        function createFoodCard(food) {
+        function createFoodCard(food, isSelected = false) {
             const card = document.createElement('div');
             card.className = 'food-card touch-friendly';
+            
+            // Calculate percentage for bars based on recommended daily values
+            const proteinPercentage = (food.protein / 80) * 100;
+            const phosphorusPercentage = (food.phosphorus / 1000) * 100;
+            const potassiumPercentage = (food.potassium / 2000) * 100;
+            const sodiumPercentage = (food.sodium / 2000) * 100;
+            
+            // Add delete button for selected foods
+            const deleteButton = isSelected ? `
+                <button class="delete-btn" onclick="event.stopPropagation(); removeFood(${food.id})">
+                    ❌
+                </button>
+            ` : '';
+            
             card.innerHTML = `
                 <div class="food-icon">${food.icon}</div>
                 <div class="food-info">
-                    <div class="food-name">${food.name}</div>
-                    <div class="food-stats">
-                        <span class="nutrient-badge">蛋白质: ${food.protein}g</span>
-                        <span class="nutrient-badge">磷: ${food.phosphorus}mg</span>
+                    <div class="food-name">
+                        ${food.name}
+                        ${deleteButton}
+                    </div>
+                    <div class="nutrient-info">
+                        <div class="mini-bar-container">
+                            <div class="mini-bar-label">
+                                <span>蛋白质</span>
+                                <span>${food.protein}g</span>
+                            </div>
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" style="width: ${proteinPercentage}%"></div>
+                            </div>
+                        </div>
+                        <div class="mini-bar-container">
+                            <div class="mini-bar-label">
+                                <span>磷</span>
+                                <span>${food.phosphorus}mg</span>
+                            </div>
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" style="width: ${phosphorusPercentage}%"></div>
+                            </div>
+                        </div>
+                        <div class="mini-bar-container">
+                            <div class="mini-bar-label">
+                                <span>钾</span>
+                                <span>${food.potassium}mg</span>
+                            </div>
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" style="width: ${potassiumPercentage}%"></div>
+                            </div>
+                        </div>
+                        <div class="mini-bar-container">
+                            <div class="mini-bar-label">
+                                <span>钠</span>
+                                <span>${food.sodium}mg</span>
+                            </div>
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" style="width: ${sodiumPercentage}%"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
             
-            card.addEventListener('click', () => addFoodToPlate(food));
+            if (!isSelected) {
+                card.addEventListener('click', () => addFoodToPlate(food));
+            }
+            
             return card;
         }
 
@@ -740,29 +945,115 @@
             const plateSection = document.getElementById('selectedFoods');
             plateSection.innerHTML = '';
             
-            selectedFoods.forEach((food, index) => {
-                const foodItem = createFoodCard(food);
-                foodItem.addEventListener('click', () => removeFood(index));
+            selectedFoods.forEach(food => {
+                const foodItem = createFoodCard(food, true);
                 plateSection.appendChild(foodItem);
             });
         }
 
-        function removeFood(index) {
-            selectedFoods.splice(index, 1);
-            updatePlate();
-            updateNutrientSummary();
+        function removeFood(foodId) {
+            const index = selectedFoods.findIndex(food => food.id === foodId);
+            if (index !== -1) {
+                selectedFoods.splice(index, 1);
+                updatePlate();
+                updateNutrientSummary();
+            }
         }
 
         function updateNutrientSummary() {
             const summary = document.getElementById('nutrientSummary');
             const totals = calculateTotals();
             
+            // Define target ranges
+            const targets = {
+                protein: { min: 60, max: 80 },
+                phosphorus: { min: 800, max: 1000 },
+                potassium: { min: 1500, max: 2000 },
+                sodium: { min: 1500, max: 2000 }
+            };
+
+            // Calculate percentages for each nutrient
+            const getPercentage = (value, target) => {
+                const percentage = (value / target.max) * 100;
+                return Math.min(percentage, 100); // Cap at 100%
+            };
+
+            // Get status color based on value
+            const getStatusColor = (value, target) => {
+                if (value < target.min) return 'var(--system-orange)';
+                if (value > target.max) return 'var(--system-red)';
+                return 'var(--system-green)';
+            };
+            
             summary.innerHTML = `
-                <div class="nutrient-totals">
-                    <div>蛋白质总量: ${totals.protein}g / 60-80g</div>
-                    <div>磷总量: ${totals.phosphorus}mg / 800-1000mg</div>
-                    <div>钾总量: ${totals.potassium}mg / 1500-2000mg</div>
-                    <div>钠总量: ${totals.sodium}mg / 1500-2000mg</div>
+                <div class="nutrient-bars">
+                    <div class="nutrient-bar-item">
+                        <div class="nutrient-label">
+                            <span>蛋白质</span>
+                            <span>${totals.protein}g / ${targets.protein.min}-${targets.protein.max}g</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="
+                                width: ${getPercentage(totals.protein, targets.protein)}%;
+                                background: ${getStatusColor(totals.protein, targets.protein)}">
+                            </div>
+                            <div class="target-zone" style="
+                                left: ${(targets.protein.min / targets.protein.max) * 100}%;
+                                right: ${100 - (targets.protein.max / targets.protein.max) * 100}%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nutrient-bar-item">
+                        <div class="nutrient-label">
+                            <span>磷</span>
+                            <span>${totals.phosphorus}mg / ${targets.phosphorus.min}-${targets.phosphorus.max}mg</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="
+                                width: ${getPercentage(totals.phosphorus, targets.phosphorus)}%;
+                                background: ${getStatusColor(totals.phosphorus, targets.phosphorus)}">
+                            </div>
+                            <div class="target-zone" style="
+                                left: ${(targets.phosphorus.min / targets.phosphorus.max) * 100}%;
+                                right: ${100 - (targets.phosphorus.max / targets.phosphorus.max) * 100}%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nutrient-bar-item">
+                        <div class="nutrient-label">
+                            <span>钾</span>
+                            <span>${totals.potassium}mg / ${targets.potassium.min}-${targets.potassium.max}mg</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="
+                                width: ${getPercentage(totals.potassium, targets.potassium)}%;
+                                background: ${getStatusColor(totals.potassium, targets.potassium)}">
+                            </div>
+                            <div class="target-zone" style="
+                                left: ${(targets.potassium.min / targets.potassium.max) * 100}%;
+                                right: ${100 - (targets.potassium.max / targets.potassium.max) * 100}%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nutrient-bar-item">
+                        <div class="nutrient-label">
+                            <span>钠</span>
+                            <span>${totals.sodium}mg / ${targets.sodium.min}-${targets.sodium.max}mg</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="
+                                width: ${getPercentage(totals.sodium, targets.sodium)}%;
+                                background: ${getStatusColor(totals.sodium, targets.sodium)}">
+                            </div>
+                            <div class="target-zone" style="
+                                left: ${(targets.sodium.min / targets.sodium.max) * 100}%;
+                                right: ${100 - (targets.sodium.max / targets.sodium.max) * 100}%">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
         }
