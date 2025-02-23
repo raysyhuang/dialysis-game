@@ -205,25 +205,69 @@
                 font-size: 16px;
             }
         }
+
+        /* Add back button style */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 8px 16px;
+            background: var(--system-background);
+            border: none;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .game-header {
+            text-align: center;
+            padding: 20px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        h1 {
+            font-size: 34px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(120deg, var(--system-blue), var(--system-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 17px;
+            margin-top: 8px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
-    <nav class="nav-bar">
-        <div class="nav-container">
-            <a href="index.html" class="nav-link">
-                <span class="nav-icon">🍽️</span>
-                <span class="nav-text">营养搭配</span>
-            </a>
-            <a href="quiz.html" class="nav-link">
-                <span class="nav-icon">📝</span>
-                <span class="nav-text">营养知识</span>
-            </a>
-            <a href="fluid.html" class="nav-link">
-                <span class="nav-icon">💧</span>
-                <span class="nav-text">水分管理</span>
-            </a>
-        </div>
-    </nav>
+    <a href="index.html" class="back-button">
+        <span>←</span>
+        <span>返回首页</span>
+    </a>
+
+    <!-- Add this game header section -->
+    <div class="game-header">
+        <h1>营养知识问答</h1>
+        <p class="subtitle">测试一下你的透析营养知识吧！</p>
+    </div>
 
     <div class="quiz-container">
         <div class="progress-bar">

@@ -1,25 +1,37 @@
-# 透析患者营养管理助手 (Dialysis Patient Nutrition Assistant)
+# 透析患者健康助手
 
-一个帮助透析患者更好地管理饮食营养的互动式网页应用。
+一个帮助透析患者管理营养和健康的 Web 应用。
 
-An interactive web application to help dialysis patients better manage their dietary nutrition.
+## 功能特点
 
-## 功能特点 (Features)
+该应用包含三个主要模块：
 
-- 🍽️ 营养搭配游戏 (Nutrition Combination Game)
-  - 通过互动方式学习食物营养成分
-  - 实时营养值计算和反馈
-  - 友好的用户界面和动画效果
+1. **营养均衡配餐** (nutrition.html)
+   - 交互式食物选择界面
+   - 实时营养成分计算
+   - 营养均衡建议
+   - 新手引导教程
 
-- 📝 营养知识问答 (Nutrition Knowledge Quiz)
-  - 测试营养相关知识
-  - 即时反馈和解释
-  - 进度追踪
+2. **营养知识问答** (quiz.html)
+   - 营养知识测试
+   - 即时反馈和解释
+   - 得分统计
+   - 进度显示
 
-- 💧 水分管理工具 (Fluid Management Tool)
-  - 每日水分摄入追踪
-  - 实时视觉反馈
-  - 智能提醒和建议
+3. **水分管理工具** (fluid.html)
+   - 每日水分摄入追踪
+   - 视觉化水量显示
+   - 本地数据存储
+   - 管理小贴士
+
+## 技术栈
+
+- 纯原生 HTML5
+- CSS3 (包含现代特性如 CSS Variables, Flexbox, Grid)
+- 原生 JavaScript
+- localStorage 用于数据持久化
+
+## 项目结构
 
 ## 在线体验 (Live Demo)
 
@@ -38,13 +50,6 @@ An interactive web application to help dialysis patients better manage their die
    ```
 
 3. 在浏览器中访问 `http://localhost:8000`
-
-## 技术栈 (Tech Stack)
-
-- HTML5
-- CSS3
-- JavaScript (ES6+)
-- 响应式设计
 
 ## 贡献 (Contributing)
 
