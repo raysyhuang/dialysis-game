@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>每日水分管理小游戏</title>
+    <title>透析患者液体管理助手</title>
     <style>
         :root {
             --system-gray: #8E8E93;
@@ -251,6 +251,215 @@
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+
+        .settings-panel {
+            background: var(--card-background);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .settings-panel.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .settings-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: var(--system-background);
+            border: none;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group {
+            margin: 12px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--system-gray);
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .achievements {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .achievement-card {
+            background: var(--system-background);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .achievement-card.unlocked {
+            opacity: 1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-chart {
+            height: 200px;
+            margin: 20px 0;
+            background: var(--system-background);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .reminder-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--system-background);
+            padding: 12px 24px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translate(-50%, 20px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        .warning-severe {
+            color: var(--system-red);
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        .fluid-info-card {
+            background: var(--system-background);
+            padding: 16px;
+            border-radius: 12px;
+            margin: 12px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .food-fluid-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .food-item {
+            background: var(--card-background);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .food-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .symptom-checker {
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(255, 59, 48, 0.1);
+            border-radius: 12px;
+        }
+
+        .emergency-info {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--system-red);
+            color: white;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .fluid-history-card {
+            background: var(--system-background);
+            padding: 16px;
+            border-radius: 12px;
+            margin: 12px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .fluid-history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 12px;
+        }
+
+        .fluid-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            margin: 4px 0;
+            background: var(--card-background);
+            border-radius: 8px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .fluid-history-item .time {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .fluid-history-item .remove-btn {
+            color: var(--system-red);
+            background: none;
+            border: none;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .fluid-history-item .remove-btn:hover {
+            opacity: 1;
+        }
+
+        .empty-history {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 20px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -259,10 +468,34 @@
         <span>返回首页</span>
     </a>
 
-    <!-- Add this game header section -->
+    <button class="settings-button" onclick="toggleSettings()">
+        <span>⚙️</span>
+        <span>设置</span>
+    </button>
+
     <div class="game-header">
-        <h1>每日水分管理</h1>
-        <p class="subtitle">合理控制每日饮水量，保持健康！</p>
+        <h1>透析患者液体管理助手</h1>
+        <p class="subtitle">安全控制液体摄入，保持健康生活！</p>
+    </div>
+
+    <div class="settings-panel" id="settingsPanel">
+        <h3>个人设置</h3>
+        <div class="input-group">
+            <label for="dryWeight">干重 (kg)</label>
+            <input type="number" id="dryWeight" onchange="updateFluidLimit()">
+        </div>
+        <div class="input-group">
+            <label for="dialysisFrequency">每周透析次数</label>
+            <select id="dialysisFrequency" onchange="updateFluidLimit()">
+                <option value="2">每周2次</option>
+                <option value="3">每周3次</option>
+                <option value="4">每周4次</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>建议每日液体限制：<span id="recommendedAmount">0</span>ml</label>
+            <p class="subtitle">（包括饮品、汤类、水果等含水食物）</p>
+        </div>
     </div>
 
     <div class="game-container">
@@ -273,43 +506,117 @@
             </div>
         </div>
 
+        <div class="fluid-history-card">
+            <h3>今日液体摄入记录 📝</h3>
+            <div id="fluidHistory" class="fluid-history-list">
+                <!-- History items will be added here dynamically -->
+            </div>
+        </div>
+
         <div id="message"></div>
 
-        <div class="drink-buttons">
-            <button class="drink-button" onclick="addWater(100)">
-                <span>🥤</span> 小杯 (100ml)
-            </button>
-            <button class="drink-button" onclick="addWater(200)">
-                <span>🥛</span> 中杯 (200ml)
-            </button>
-            <button class="drink-button" onclick="addWater(300)">
-                <span>🫖</span> 大杯 (300ml)
-            </button>
-            <button class="drink-button" onclick="resetWater()" style="background: var(--system-red); color: white;">
-                <span>🔄</span> 重置
-            </button>
+        <div class="fluid-info-card">
+            <h3>常见食物液体含量 💧</h3>
+            <div class="food-fluid-list">
+                <div class="food-item" data-amount="200" data-name="饮料/水">
+                    <span>🥤</span>
+                    <p>饮料/水 (200ml)</p>
+                </div>
+                <div class="food-item" data-amount="100" data-name="汤类">
+                    <span>🍜</span>
+                    <p>汤类 (100ml)</p>
+                </div>
+                <div class="food-item" data-amount="80" data-name="西瓜片">
+                    <span>🍉</span>
+                    <p>西瓜片 (80ml)</p>
+                </div>
+                <div class="food-item" data-amount="50" data-name="橙子">
+                    <span>🍊</span>
+                    <p>橙子 (50ml)</p>
+                </div>
+                <div class="food-item" data-amount="30" data-name="苹果">
+                    <span>🍎</span>
+                    <p>苹果 (30ml)</p>
+                </div>
+                <div class="food-item" data-amount="40" data-name="葡萄">
+                    <span>🍇</span>
+                    <p>葡萄 (40ml)</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="symptom-checker">
+            <h3>⚠️ 液体摄入过量警示</h3>
+            <div class="tip-item">
+                <span>👀</span> 眼睑浮肿
+            </div>
+            <div class="tip-item">
+                <span>👣</span> 脚踝水肿
+            </div>
+            <div class="tip-item">
+                <span>⚖️</span> 体重快速增加
+            </div>
+            <div class="tip-item">
+                <span>😮‍💨</span> 呼吸困难
+            </div>
         </div>
 
         <div class="tips-container">
-            <h3>管理小贴士 💡</h3>
+            <h3>健康管理小贴士 💡</h3>
             <div class="tip-item">
-                <span>🌞</span> 建议将每日水量平均分配到各个时段
+                <span>📏</span> 每天称重并记录，控制两次透析间体重增长不超过干重的5%
             </div>
             <div class="tip-item">
-                <span>🍎</span> 水果中也含有水分，需要计入每日总量
+                <span>🧊</span> 含冰块咀嚼可缓解口渴（计入液体量）
             </div>
             <div class="tip-item">
-                <span>🧊</span> 含冰块和冷饮会增加口渴感，建议少饮
+                <span>🍬</span> 可以用柠檬片或硬糖缓解口渴
             </div>
             <div class="tip-item">
-                <span>🌡️</span> 天热时可以用喷雾或湿毛巾降温解渴
+                <span>🧂</span> 控制钠盐摄入可减少口渴感
             </div>
+        </div>
+
+        <button class="drink-button" onclick="resetWater()" style="background: var(--system-red); color: white; width: 100%; margin-top: 20px;">
+            <span>🔄</span> 重置今日记录
+        </button>
+
+        <div class="emergency-info">
+            <p>如果出现严重浮肿、呼吸困难等症状，请立即联系医生！</p>
+            <p>急诊电话：120</p>
         </div>
     </div>
 
+    <div class="reminder-toast" id="reminderToast"></div>
+
     <script>
         let currentAmount = 0;
-        const dailyLimit = 1000; // 设置每日限制量（ml）
+        let dailyLimit = 1000; // 默认值
+        let dryWeight = 0;
+        let fluidHistory = [];
+
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('active');
+        }
+
+        function updateFluidLimit() {
+            const dryWeight = parseFloat(document.getElementById('dryWeight').value);
+            const dialysisFrequency = parseInt(document.getElementById('dialysisFrequency').value);
+            
+            // Base fluid allowance of 800ml + 4ml per kg of dry weight
+            dailyLimit = Math.round(800 + (dryWeight * 4));
+            
+            // Cap the maximum limit at 1500ml
+            dailyLimit = Math.min(dailyLimit, 1500);
+            
+            document.getElementById('recommendedAmount').textContent = dailyLimit;
+            document.getElementById('dailyLimit').textContent = dailyLimit;
+            
+            localStorage.setItem('fluidLimit', dailyLimit);
+            localStorage.setItem('dryWeight', dryWeight);
+            updateDisplay();
+        }
 
         function updateDisplay() {
             const waterFill = document.getElementById('waterFill');
@@ -322,51 +629,139 @@
 
             if (percentage >= 100) {
                 messageElement.innerHTML = `
-                    <div class="warning">⚠️ 已达到每日限制量！请注意控制水分摄入。</div>
+                    <div class="warning-severe">⚠️ 危险！已超过每日液体限制！请立即停止摄入液体，如有不适请及时就医。</div>
                 `;
             } else if (percentage >= 80) {
                 messageElement.innerHTML = `
-                    <div class="warning">⚠️ 接近限制量，请谨慎饮水！</div>
+                    <div class="warning">⚠️ 接近限制，请特别注意控制！</div>
                 `;
             } else if (percentage >= 50) {
                 messageElement.innerHTML = `
-                    <div class="success">👍 记得均匀分配剩余水量！</div>
+                    <div class="success">👍 请继续保持谨慎控制液体摄入！</div>
                 `;
-            } else {
-                messageElement.innerHTML = '';
             }
         }
 
-        function addWater(amount) {
+        function addWater(amount, itemName) {
             if (currentAmount + amount > dailyLimit) {
                 document.getElementById('message').innerHTML = `
-                    <div class="warning">⚠️ 超出限制！请选择更小的量</div>
+                    <div class="warning-severe">⚠️ 危险！这会超出您的液体限制！</div>
                 `;
                 return;
             }
             
+            const timestamp = new Date();
+            const historyItem = {
+                id: Date.now(),
+                amount: amount,
+                name: itemName,
+                time: timestamp
+            };
+            
+            fluidHistory.push(historyItem);
             currentAmount += amount;
             updateDisplay();
-            
-            // 保存到本地存储
-            localStorage.setItem('waterAmount', currentAmount);
+            updateHistory();
+            saveData();
+        }
+
+        function removeFluidItem(id) {
+            const item = fluidHistory.find(item => item.id === id);
+            if (item) {
+                currentAmount -= item.amount;
+                fluidHistory = fluidHistory.filter(item => item.id !== id);
+                updateDisplay();
+                updateHistory();
+                saveData();
+            }
+        }
+
+        function updateHistory() {
+            const historyContainer = document.getElementById('fluidHistory');
+            if (fluidHistory.length === 0) {
+                historyContainer.innerHTML = '<div class="empty-history">暂无记录</div>';
+                return;
+            }
+
+            historyContainer.innerHTML = fluidHistory
+                .sort((a, b) => new Date(b.time) - new Date(a.time))
+                .map(item => `
+                    <div class="fluid-history-item">
+                        <div>
+                            <span>${item.name}</span>
+                            <span>(${item.amount}ml)</span>
+                            <span class="time">${formatTime(new Date(item.time))}</span>
+                        </div>
+                        <button class="remove-btn" onclick="removeFluidItem(${item.id})">×</button>
+                    </div>
+                `).join('');
+        }
+
+        function formatTime(date) {
+            return `${padZero(date.getHours())}:${padZero(date.getMinutes())}`;
+        }
+
+        function padZero(num) {
+            return num.toString().padStart(2, '0');
+        }
+
+        function saveData() {
+            localStorage.setItem('fluidAmount', currentAmount);
+            localStorage.setItem('fluidHistory', JSON.stringify(fluidHistory));
         }
 
         function resetWater() {
             currentAmount = 0;
+            fluidHistory = [];
             updateDisplay();
-            localStorage.setItem('waterAmount', 0);
+            updateHistory();
+            saveData();
         }
 
-        // 页面加载时检查本地存储
+        // Initialize click handlers for food items
+        function initializeFoodItems() {
+            document.querySelectorAll('.food-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const amount = parseInt(this.dataset.amount);
+                    const name = this.dataset.name;
+                    addWater(amount, name);
+                });
+            });
+        }
+
         window.onload = function() {
-            const saved = localStorage.getItem('waterAmount');
-            if (saved) {
-                currentAmount = parseInt(saved);
-                updateDisplay();
+            const saved = localStorage.getItem('fluidAmount');
+            const savedLimit = localStorage.getItem('fluidLimit');
+            const savedWeight = localStorage.getItem('dryWeight');
+            const savedHistory = localStorage.getItem('fluidHistory');
+            
+            if (saved) currentAmount = parseInt(saved);
+            if (savedLimit) dailyLimit = parseInt(savedLimit);
+            if (savedWeight) {
+                document.getElementById('dryWeight').value = savedWeight;
             }
-            document.getElementById('dailyLimit').textContent = dailyLimit;
+            if (savedHistory) {
+                try {
+                    fluidHistory = JSON.parse(savedHistory);
+                } catch (e) {
+                    fluidHistory = [];
+                }
+            }
+            
+            // Initialize the click handlers
+            initializeFoodItems();
+            
+            updateDisplay();
+            updateHistory();
         };
+
+        // 每天午夜重置数据
+        setInterval(() => {
+            const now = new Date();
+            if (now.getHours() === 0 && now.getMinutes() === 0) {
+                resetWater();
+            }
+        }, 60000);
     </script>
 </body>
 </html> 

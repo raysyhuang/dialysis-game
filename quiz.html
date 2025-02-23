@@ -277,50 +277,43 @@
         <div id="question-container"></div>
     </div>
 
-    <script>
-        const questions = [
-            {
-                question: "透析患者应该限制哪种矿物质的摄入？",
-                options: [
-                    { text: "钾", icon: "🥔", correct: true },
-                    { text: "维生素C", icon: "🍊", correct: false },
-                    { text: "铁", icon: "🥩", correct: false },
-                    { text: "锌", icon: "🥜", correct: false }
-                ],
-                explanation: "透析患者需要限制钾的摄入，因为肾功能受损会导致钾在体内积累。高钾血症可能导致严重的健康问题。"
-            },
-            {
-                question: "以下哪种食物最适合透析患者食用？",
-                options: [
-                    { text: "香蕉", icon: "🍌", correct: false },
-                    { text: "苹果", icon: "🍎", correct: true },
-                    { text: "橙子", icon: "🍊", correct: false },
-                    { text: "西瓜", icon: "🍉", correct: false }
-                ],
-                explanation: "苹果含钾量相对较低，是透析患者较好的水果选择。而香蕉、橙子和西瓜都含有较高的钾。"
-            },
-            {
-                question: "透析患者每天的蛋白质摄入量应该是多少？",
-                options: [
-                    { text: "20-30克", icon: "🥚", correct: false },
-                    { text: "40-50克", icon: "🥩", correct: false },
-                    { text: "60-80克", icon: "🍗", correct: true },
-                    { text: "100克以上", icon: "🥩", correct: false }
-                ],
-                explanation: "透析患者需要适量增加蛋白质摄入，建议每天摄入60-80克优质蛋白质，以补充透析过程中流失的蛋白质。"
-            }
-            // Add more questions as needed
-        ];
-
+    <!-- Move script tags to the end of body and add defer attribute -->
+    <script src="js/questionsDB.js" defer></script>
+    <script defer>
+        const QUESTIONS_PER_SESSION = 5;
         let currentQuestion = 0;
         let score = 0;
+        let selectedQuestions = [];
         const questionContainer = document.getElementById('question-container');
         const scoreElement = document.getElementById('score');
         const progressFill = document.querySelector('.progress-fill');
 
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function initializeQuiz() {
+            // Add error handling
+            if (!questionsDatabase || !questionsDatabase.length) {
+                console.error('Questions database not loaded properly');
+                return;
+            }
+            // Randomly select 5 questions
+            selectedQuestions = shuffleArray([...questionsDatabase])
+                .slice(0, QUESTIONS_PER_SESSION);
+            currentQuestion = 0;
+            score = 0;
+            scoreElement.textContent = score;
+            showQuestion(0);
+        }
+
         function showQuestion(index) {
-            const question = questions[index];
-            progressFill.style.width = `${(index / questions.length) * 100}%`;
+            const question = selectedQuestions[index];
+            progressFill.style.width = `${(index / QUESTIONS_PER_SESSION) * 100}%`;
             
             questionContainer.innerHTML = `
                 <div class="question">${question.question}</div>
@@ -339,7 +332,7 @@
         }
 
         function checkAnswer(selectedIndex) {
-            const question = questions[currentQuestion];
+            const question = selectedQuestions[currentQuestion];
             const options = questionContainer.querySelectorAll('.option');
             const explanation = document.getElementById('explanation');
             
@@ -353,7 +346,7 @@
             });
 
             if (question.options[selectedIndex].correct) {
-                score += 10;
+                score += 1; // Changed from 10 to 1
                 scoreElement.textContent = score;
             }
 
@@ -361,7 +354,7 @@
 
             setTimeout(() => {
                 currentQuestion++;
-                if (currentQuestion < questions.length) {
+                if (currentQuestion < QUESTIONS_PER_SESSION) {
                     showQuestion(currentQuestion);
                 } else {
                     showFinalScore();
@@ -370,14 +363,14 @@
         }
 
         function showFinalScore() {
-            const percentage = (score / (questions.length * 10)) * 100;
+            const percentage = (score / QUESTIONS_PER_SESSION) * 100;
             questionContainer.innerHTML = `
                 <div style="text-align: center;">
                     <h2>测试完成！</h2>
                     <div style="font-size: 48px; margin: 20px 0;">
                         ${percentage >= 80 ? '🏆' : percentage >= 60 ? '👍' : '💪'}
                     </div>
-                    <p>你的得分是: ${score}分</p>
+                    <p>你的得分是: ${score}/${QUESTIONS_PER_SESSION}分</p>
                     <p>${getFeedback(percentage)}</p>
                     <button onclick="restartQuiz()" 
                             style="background: var(--system-blue); 
@@ -400,14 +393,18 @@
         }
 
         function restartQuiz() {
-            currentQuestion = 0;
-            score = 0;
-            scoreElement.textContent = score;
-            showQuestion(0);
+            initializeQuiz();
         }
 
-        showQuestion(0);
+        // Initialize the quiz when both DOM and scripts are loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            if (questionsDatabase) {
+                initializeQuiz();
+            } else {
+                console.error('Questions database not found');
+            }
+        });
     </script>
-    <script src="js/navigation.js"></script>
+    <script src="js/navigation.js" defer></script>
 </body>
 </html> 
