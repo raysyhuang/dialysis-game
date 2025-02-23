@@ -38,8 +38,8 @@
         .quiz-container {
             background: var(--card-background);
             border-radius: 20px;
-            padding: 24px;
-            margin: 20px 0;
+            padding: 16px;
+            margin: 12px 0;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
         }
 
@@ -58,7 +58,7 @@
         }
 
         .question {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 600;
             margin: 20px 0;
             line-height: 1.5;
@@ -66,7 +66,7 @@
 
         .options {
             display: grid;
-            gap: 12px;
+            gap: 8px;
             margin: 24px 0;
         }
 
@@ -74,12 +74,13 @@
             background: var(--system-background);
             border: 2px solid transparent;
             border-radius: 12px;
-            padding: 16px;
+            padding: 12px;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             gap: 12px;
+            font-size: 14px;
         }
 
         .option:hover {
@@ -181,6 +182,27 @@
         @media (prefers-color-scheme: dark) {
             .nav-bar {
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        /* Add responsive breakpoints */
+        @media (min-width: 768px) {
+            .quiz-container {
+                padding: 24px;
+                margin: 20px 0;
+            }
+
+            .question {
+                font-size: 20px;
+            }
+
+            .options {
+                gap: 12px;
+            }
+
+            .option {
+                padding: 16px;
+                font-size: 16px;
             }
         }
     </style>

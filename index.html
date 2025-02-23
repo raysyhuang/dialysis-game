@@ -2,7 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>营养均衡小游戏</title>
+    <link rel="stylesheet" href="css/responsive.css">
     <style>
         :root {
             --system-gray: #8E8E93;
@@ -71,11 +73,9 @@
         }
 
         .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            padding: 20px;
-            animation: slideIn 0.5s ease-out 0.2s backwards;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            padding: 12px;
         }
 
         .food-list, .selected-foods {
@@ -94,7 +94,7 @@
         .food-item {
             background: var(--system-background);
             border-radius: 16px;
-            padding: 20px;
+            padding: 16px;
             margin: 12px 0;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -128,7 +128,7 @@
         }
 
         .food-name {
-            font-size: 20px;
+            font-size: 16px;
             font-weight: 600;
             margin-bottom: 12px;
             display: flex;
@@ -148,11 +148,7 @@
         }
 
         .food-details {
-            font-size: 15px;
-            color: var(--text-secondary);
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
+            grid-template-columns: 1fr;
         }
 
         .nutrient-item {
@@ -499,6 +495,149 @@
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             }
         }
+
+        /* Add responsive breakpoints */
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 24px;
+                padding: 20px;
+            }
+
+            .food-name {
+                font-size: 20px;
+            }
+
+            .food-details {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Add touch-friendly interactions */
+        @media (hover: none) {
+            .food-item:hover {
+                transform: none;
+            }
+
+            .food-item:active {
+                background: var(--card-background);
+                transform: scale(0.98);
+            }
+        }
+
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            padding: 16px;
+        }
+
+        .meal-plate {
+            background: var(--card-background);
+            border-radius: 24px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .plate-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .food-card {
+            background: var(--system-background);
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .food-icon {
+            font-size: 32px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--card-background);
+            border-radius: 12px;
+        }
+
+        .food-info {
+            flex: 1;
+        }
+
+        .food-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .food-stats {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .nutrient-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin: 4px;
+            background: var(--card-background);
+        }
+
+        .meal-summary {
+            background: linear-gradient(135deg, var(--system-blue), var(--system-green));
+            color: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .tutorial-card {
+            background: var(--system-background);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 320px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .plate-section {
+                grid-template-columns: 1fr;
+            }
+
+            .food-card {
+                padding: 12px;
+            }
+
+            .food-icon {
+                font-size: 24px;
+                width: 36px;
+                height: 36px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -518,254 +657,181 @@
             </a>
         </div>
     </nav>
-    <div class="game-header">
-        <h1>健康饮食小游戏</h1>
-        <div class="subtitle">来玩一玩！选择你喜欢的食物，让我们一起打造健康餐盘 🍽️</div>
-    </div>
-    <div class="container">
-        <div class="food-list" id="foodList">
-            <h3>可选食物</h3>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>营养均衡小游戏</h1>
+            <p class="subtitle">来制作一份营养均衡的餐盘吧！</p>
         </div>
-        <div class="selected-foods" id="selectedFoods">
-            <h3>已选食物</h3>
+
+        <div class="meal-plate">
+            <h2>今日餐盘 🍽️</h2>
+            <div id="selectedFoods" class="plate-section">
+                <!-- Selected foods will be displayed here -->
+            </div>
+
+            <div class="meal-summary" id="mealSummary">
+                <h3>营养摄入统计</h3>
+                <div id="nutrientSummary"></div>
+            </div>
+        </div>
+
+        <div class="food-selection">
+            <h2>可选食物 🥗</h2>
+            <div class="food-categories">
+                <button class="category-btn active" data-category="all">全部</button>
+                <button class="category-btn" data-category="protein">蛋白质</button>
+                <button class="category-btn" data-category="vegetable">蔬菜</button>
+                <button class="category-btn" data-category="grain">谷物</button>
+            </div>
+            <div id="foodGrid" class="food-grid">
+                <!-- Food items will be generated here -->
+            </div>
         </div>
     </div>
-    <div class="buttons">
-        <button class="check" onclick="checkNutrition()">检查营养</button>
-        <button class="reset" onclick="resetSelection()">重置选择</button>
-    </div>
-    <div class="output" id="output"></div>
 
     <script>
-        const testFoods = [
-            { 
-                name: "香蕉", 
-                icon: "🍌",
-                category: "水果",
-                potassium: 400, 
-                protein: 1, 
-                phosphorus: 20, 
-                sodium: 1,
-                description: "香甜可口的水果，补充能量",
-                benefits: ["补充能量", "含钾丰富"]
-            },
-            { 
-                name: "鸡胸肉", 
-                icon: "🍗",
-                category: "肉类",
-                protein: 30, 
-                potassium: 300, 
-                phosphorus: 200, 
-                sodium: 70,
-                description: "优质蛋白来源",
-                benefits: ["增强肌肉", "补充蛋白质"]
-            },
-            { 
-                name: "薯片", 
-                icon: "🥔",
-                category: "零食",
-                sodium: 800, 
-                potassium: 100, 
-                protein: 2, 
-                phosphorus: 50,
-                description: "少量食用的零食",
-                benefits: ["适量享用"]
-            },
-            { name: "三文鱼", protein: 25, potassium: 500, phosphorus: 300, sodium: 60 },
-            { name: "豆腐", protein: 8, potassium: 120, phosphorus: 150, sodium: 7 },
-            { name: "西兰花", protein: 3, potassium: 320, phosphorus: 67, sodium: 33 }
-        ];
+        // Define food database with proper icons and categories
+        const foodDatabase = {
+            protein: [
+                { id: 1, name: '鸡胸肉', icon: '🍗', category: 'protein', protein: 30, phosphorus: 200, potassium: 300, sodium: 70 },
+                { id: 2, name: '鱼肉', icon: '🐟', category: 'protein', protein: 25, phosphorus: 180, potassium: 250, sodium: 60 },
+                { id: 3, name: '豆腐', icon: '🧊', category: 'protein', protein: 15, phosphorus: 120, potassium: 150, sodium: 40 }
+            ],
+            vegetable: [
+                { id: 4, name: '西兰花', icon: '🥦', category: 'vegetable', protein: 5, phosphorus: 80, potassium: 200, sodium: 30 },
+                { id: 5, name: '胡萝卜', icon: '🥕', category: 'vegetable', protein: 2, phosphorus: 40, potassium: 150, sodium: 20 },
+                { id: 6, name: '生菜', icon: '🥬', category: 'vegetable', protein: 1, phosphorus: 30, potassium: 100, sodium: 10 }
+            ],
+            grain: [
+                { id: 7, name: '米饭', icon: '🍚', category: 'grain', protein: 8, phosphorus: 100, potassium: 80, sodium: 5 },
+                { id: 8, name: '全麦面包', icon: '🍞', category: 'grain', protein: 10, phosphorus: 90, potassium: 100, sodium: 15 },
+                { id: 9, name: '燕麦', icon: '🥣', category: 'grain', protein: 12, phosphorus: 110, potassium: 120, sodium: 8 }
+            ]
+        };
 
-        class FoodDragGame {
-            constructor(foods) {
-                this.foods = foods;
-                this.selected = [];
-                this.nutrientLimits = {
-                    potassium: { min: 1500, max: 2000, name: '钾', unit: 'mg' },
-                    protein: { min: 60, max: 80, name: '蛋白质', unit: 'g' },
-                    phosphorus: { min: 800, max: 1000, name: '磷', unit: 'mg' },
-                    sodium: { min: 1500, max: 2000, name: '钠', unit: 'mg' }
-                };
-            }
+        let selectedFoods = [];
+        let currentCategory = 'all';
 
-            checkNutrition() {
-                const nutrients = Object.keys(this.nutrientLimits).reduce((acc, nutrient) => {
-                    acc[nutrient] = 0;
-                    return acc;
-                }, {});
-
-                this.selected.forEach(food => {
-                    Object.keys(nutrients).forEach(nutrient => {
-                        nutrients[nutrient] += food[nutrient] || 0;
-                    });
-                });
-
-                return {
-                    isBalanced: this.checkNutrientBalance(nutrients),
-                    warnings: this.generateWarnings(nutrients),
-                    nutrients
-                };
-            }
-
-            checkNutrientBalance(nutrients) {
-                return Object.entries(nutrients).every(([nutrient, value]) => 
-                    value >= this.nutrientLimits[nutrient].min && 
-                    value <= this.nutrientLimits[nutrient].max
-                );
-            }
-
-            generateWarnings(nutrients) {
-                const warnings = [];
-                
-                Object.entries(this.nutrientLimits).forEach(([key, limit]) => {
-                    const value = nutrients[key];
-                    if (value < limit.min) {
-                        warnings.push({
-                            message: `${limit.name}含量不足（${value}${limit.unit}），建议添加富含${limit.name}的食物`,
-                            severity: 'warning',
-                            nutrient: key
-                        });
-                    }
-                    if (value > limit.max) {
-                        warnings.push({
-                            message: `${limit.name}含量过高（${value}${limit.unit}），建议减少富含${limit.name}的食物`,
-                            severity: 'error',
-                            nutrient: key
-                        });
-                    }
-                });
-                return warnings;
-            }
-        }
-
-        const game = new FoodDragGame(testFoods);
-        
-        function formatNutrients(food) {
-            return Object.entries(game.nutrientLimits).map(([key, limit]) => {
-                const value = food[key] || 0;
-                const percentage = (value / limit.max) * 100;
-                let indicator = '⚪'; // neutral
-                if (percentage > 30) indicator = '🟢'; // good source
-                if (percentage > 60) indicator = '⭐'; // excellent source
-                
-                return `
-                    <div class="nutrient-item">
-                        <div class="nutrient-label">
-                            <span>${limit.name}</span>
-                            <span>${indicator} ${value}${limit.unit}</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function createFoodItem(food, onClick) {
-            const div = document.createElement('div');
-            div.className = 'food-item';
-            div.innerHTML = `
-                <div class="food-name">
-                    <span class="food-icon-large">${food.icon}</span>
-                    <div class="food-info">
-                        <div class="food-title">${food.name}</div>
-                        <span class="food-category">${food.category || '其他'}</span>
+        function createFoodCard(food) {
+            const card = document.createElement('div');
+            card.className = 'food-card touch-friendly';
+            card.innerHTML = `
+                <div class="food-icon">${food.icon}</div>
+                <div class="food-info">
+                    <div class="food-name">${food.name}</div>
+                    <div class="food-stats">
+                        <span class="nutrient-badge">蛋白质: ${food.protein}g</span>
+                        <span class="nutrient-badge">磷: ${food.phosphorus}mg</span>
                     </div>
                 </div>
-                <div class="food-benefits">
-                    ${(food.benefits || []).map(benefit => 
-                        `<span class="benefit-tag">✨ ${benefit}</span>`
-                    ).join('')}
-                </div>
-                <div class="food-details">${formatNutrients(food)}</div>
             `;
-            div.onclick = onClick;
-            return div;
+            
+            card.addEventListener('click', () => addFoodToPlate(food));
+            return card;
         }
 
-        function updateUI() {
-            const foodList = document.getElementById('foodList');
-            const selectedList = document.getElementById('selectedFoods');
-            
-            foodList.innerHTML = '<h3>可选食物</h3>';
-            selectedList.innerHTML = '<h3>已选食物</h3>';
-            
-            testFoods.forEach(food => {
-                const div = createFoodItem(food, () => {
-                    div.style.animation = 'pulse 0.3s ease-out';
-                    game.selected.push(food);
-                    updateUI();
-                    setTimeout(() => div.style.animation = '', 300);
-                });
-                foodList.appendChild(div);
-            });
+        function addFoodToPlate(food) {
+            selectedFoods.push(food);
+            updatePlate();
+            updateNutrientSummary();
+        }
 
-            game.selected.forEach((food, index) => {
-                const div = createFoodItem(food, () => {
-                    div.style.animation = 'pulse 0.3s ease-out';
-                    game.selected.splice(index, 1);
-                    updateUI();
-                    setTimeout(() => div.style.animation = '', 300);
-                });
-                selectedList.appendChild(div);
+        function updatePlate() {
+            const plateSection = document.getElementById('selectedFoods');
+            plateSection.innerHTML = '';
+            
+            selectedFoods.forEach((food, index) => {
+                const foodItem = createFoodCard(food);
+                foodItem.addEventListener('click', () => removeFood(index));
+                plateSection.appendChild(foodItem);
             });
         }
 
-        function checkNutrition() {
-            const result = game.checkNutrition();
-            const output = document.getElementById('output');
+        function removeFood(index) {
+            selectedFoods.splice(index, 1);
+            updatePlate();
+            updateNutrientSummary();
+        }
+
+        function updateNutrientSummary() {
+            const summary = document.getElementById('nutrientSummary');
+            const totals = calculateTotals();
             
-            let overallFeedback = '';
-            if (result.isBalanced) {
-                overallFeedback = `
-                    <div class="success-message">
-                        <h3>太棒了！ 🎉</h3>
-                        <p>你的搭配非常健康！继续保持哦！</p>
-                        <div class="achievement">🏆 营养达人</div>
-                    </div>
-                `;
-            } else {
-                overallFeedback = `
-                    <div class="feedback-message">
-                        <h3>继续加油！ 💪</h3>
-                        <p>让我们一起改进餐盘搭配</p>
-                    </div>
-                `;
-            }
-
-            // Simplified warnings with friendly suggestions
-            const suggestions = result.warnings.map(w => {
-                const foods = testFoods
-                    .filter(f => f[w.nutrient] > 0)
-                    .map(f => f.icon + f.name)
-                    .slice(0, 3)
-                    .join('、');
-                    
-                return `
-                    <div class="suggestion-item">
-                        <div class="suggestion-icon">💡</div>
-                        <div class="suggestion-text">
-                            试试添加这些食物：${foods}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            output.innerHTML = `
-                <div class="results-container">
-                    ${overallFeedback}
-                    <div class="suggestions">
-                        ${suggestions}
-                    </div>
+            summary.innerHTML = `
+                <div class="nutrient-totals">
+                    <div>蛋白质总量: ${totals.protein}g / 60-80g</div>
+                    <div>磷总量: ${totals.phosphorus}mg / 800-1000mg</div>
+                    <div>钾总量: ${totals.potassium}mg / 1500-2000mg</div>
+                    <div>钠总量: ${totals.sodium}mg / 1500-2000mg</div>
                 </div>
             `;
         }
 
-        function resetSelection() {
-            game.selected = [];
-            updateUI();
-            document.getElementById('output').innerHTML = '';
+        function calculateTotals() {
+            return selectedFoods.reduce((acc, food) => ({
+                protein: acc.protein + food.protein,
+                phosphorus: acc.phosphorus + food.phosphorus,
+                potassium: acc.potassium + food.potassium,
+                sodium: acc.sodium + food.sodium
+            }), { protein: 0, phosphorus: 0, potassium: 0, sodium: 0 });
         }
 
-        updateUI();
+        function showTutorial() {
+            if (!localStorage.getItem('tutorialShown')) {
+                const tutorial = document.createElement('div');
+                tutorial.className = 'tutorial-overlay';
+                tutorial.innerHTML = `
+                    <div class="tutorial-card">
+                        <h3>欢迎来到营养均衡小游戏！ 👋</h3>
+                        <p>点击食物添加到餐盘中，再次点击可以移除。</p>
+                        <p>注意观察营养摄入是否均衡哦！</p>
+                        <button onclick="closeTutorial()" class="primary-button">开始游戏</button>
+                    </div>
+                `;
+                document.body.appendChild(tutorial);
+            }
+        }
+
+        function closeTutorial() {
+            document.querySelector('.tutorial-overlay').remove();
+            localStorage.setItem('tutorialShown', 'true');
+        }
+
+        // Initialize the game
+        function initGame() {
+            const foodGrid = document.getElementById('foodGrid');
+            
+            // Populate food grid
+            Object.values(foodDatabase).flat().forEach(food => {
+                foodGrid.appendChild(createFoodCard(food));
+            });
+
+            // Add category filter functionality
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentCategory = btn.dataset.category;
+                    updateFoodGrid();
+                });
+            });
+
+            showTutorial();
+        }
+
+        function updateFoodGrid() {
+            const foodGrid = document.getElementById('foodGrid');
+            foodGrid.innerHTML = '';
+            
+            let foods = currentCategory === 'all' 
+                ? Object.values(foodDatabase).flat()
+                : foodDatabase[currentCategory] || [];
+                
+            foods.forEach(food => {
+                foodGrid.appendChild(createFoodCard(food));
+            });
+        }
+
+        // Start the game when page loads
+        window.addEventListener('load', initGame);
     </script>
     <script src="js/navigation.js"></script>
 </body>

@@ -13,18 +13,29 @@ function updateNavigationLinks() {
             link.style.animation = '';
         }
 
-        // Add hover effect
-        link.addEventListener('mouseenter', () => {
-            if (!link.classList.contains('active')) {
-                link.style.transform = 'translateY(-2px)';
-            }
+        // Handle both click and touch events
+        link.addEventListener('touchstart', () => {
+            link.style.transform = 'scale(0.98)';
         });
 
-        link.addEventListener('mouseleave', () => {
-            if (!link.classList.contains('active')) {
-                link.style.transform = '';
-            }
+        link.addEventListener('touchend', () => {
+            link.style.transform = '';
         });
+
+        // Keep existing mouse events for desktop
+        if (window.matchMedia('(hover: hover)').matches) {
+            link.addEventListener('mouseenter', () => {
+                if (!link.classList.contains('active')) {
+                    link.style.transform = 'translateY(-2px)';
+                }
+            });
+
+            link.addEventListener('mouseleave', () => {
+                if (!link.classList.contains('active')) {
+                    link.style.transform = '';
+                }
+            });
+        }
     });
 }
 
