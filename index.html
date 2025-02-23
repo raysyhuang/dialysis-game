@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>营养均衡小游戏</title>
+    <style>
+        :root {
+            --system-gray: #8E8E93;
+            --system-green: #34C759;
+            --system-red: #FF3B30;
+            --system-orange: #FF9F0A;
+            --system-blue: #007AFF;
+            --system-background: #FFFFFF;
+            --card-background: #F2F2F7;
+            --text-primary: #000000;
+            --text-secondary: #6C6C70;
+            --progress-background: #E9E9EB;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --system-background: #FFFFFF;
+                --card-background: #F2F2F7;
+                --text-primary: #000000;
+                --text-secondary: #6C6C70;
+                --progress-background: #E9E9EB;
+            }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        body {
+            font-family: -apple-system, "SF Pro SC", "SF Pro Text", "SF Pro Icons",
+                "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--system-background);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .game-header {
+            text-align: center;
+            padding: 20px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        h1 {
+            font-size: 34px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(120deg, var(--system-blue), var(--system-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 17px;
+            margin-top: 8px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            padding: 20px;
+            animation: slideIn 0.5s ease-out 0.2s backwards;
+        }
+
+        .food-list, .selected-foods {
+            background: var(--card-background);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+        }
+
+        .food-item {
+            background: var(--system-background);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 12px 0;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .food-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(120deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .food-item:hover::before {
+            opacity: 1;
+        }
+
+        .food-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .food-item:active {
+            transform: scale(0.98);
+        }
+
+        .food-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .food-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--system-blue);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .food-details {
+            font-size: 15px;
+            color: var(--text-secondary);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .nutrient-item {
+            margin: 8px 0;
+        }
+
+        .nutrient-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .nutrient-progress {
+            height: 6px;
+            background: var(--progress-background);
+            border-radius: 3px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .nutrient-progress-bar {
+            height: 100%;
+            background: var(--system-blue);
+            border-radius: 3px;
+            transition: width 0.3s ease-out;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 32px 0;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.check {
+            background: var(--system-green);
+            color: white;
+        }
+
+        button.reset {
+            background: var(--system-red);
+            color: white;
+        }
+
+        .output {
+            background: var(--card-background);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 32px;
+        }
+
+        .warning-item {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+            font-size: 15px;
+        }
+
+        .warning-item.error {
+            background: rgba(255, 59, 48, 0.1);
+            color: var(--system-red);
+        }
+
+        .warning-item.warning {
+            background: rgba(255, 159, 10, 0.1);
+            color: #FF9F0A;
+        }
+
+        .nutrient-totals {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .nutrient-total-item {
+            background: var(--system-background);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .results-container {
+            animation: slideIn 0.5s ease-out;
+            padding: 24px;
+            background: var(--card-background);
+            border-radius: 20px;
+            margin-top: 32px;
+        }
+
+        .nutrient-chart {
+            display: flex;
+            align-items: center;
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--system-background);
+            border-radius: 12px;
+        }
+
+        .chart-label {
+            width: 100px;
+            font-weight: 600;
+        }
+
+        .chart-bar {
+            flex-grow: 1;
+            height: 20px;
+            background: var(--progress-background);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chart-fill {
+            height: 100%;
+            background: var(--system-blue);
+            transition: width 0.5s ease-out;
+        }
+
+        .chart-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+
+        .chart-marker {
+            width: 2px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes success {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .success-icon {
+            display: inline-block;
+            animation: success 0.5s ease-out;
+        }
+
+        .food-category {
+            font-size: 14px;
+            background: var(--system-background);
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            color: var(--text-secondary);
+        }
+
+        .food-description {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin: 8px 0;
+        }
+
+        .success-message, .feedback-message {
+            text-align: center;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+
+        .success-message {
+            background: rgba(52, 199, 89, 0.1);
+        }
+
+        .achievement {
+            font-size: 24px;
+            margin: 20px 0;
+            animation: success 0.5s ease-out;
+        }
+
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--system-background);
+            border-radius: 12px;
+            margin: 8px 0;
+        }
+
+        .suggestion-icon {
+            font-size: 24px;
+        }
+
+        .food-item {
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .food-item:hover {
+            border-color: var(--system-blue);
+        }
+
+        .selected-foods .food-item {
+            background: rgba(52, 199, 89, 0.1);
+        }
+
+        .food-icon-large {
+            font-size: 32px;
+            margin-right: 12px;
+        }
+
+        .food-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .food-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .food-benefits {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .benefit-tag {
+            background: var(--system-background);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .nutrient-item {
+            background: var(--system-background);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin: 4px 0;
+        }
+
+        .selected-foods .food-item {
+            border: 2px solid var(--system-green);
+            background: rgba(52, 199, 89, 0.1);
+        }
+
+        .nav-links {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .quiz-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--card-background);
+            border-radius: 16px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .quiz-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+            background: var(--system-blue);
+            color: white;
+        }
+
+        .quiz-icon {
+            font-size: 20px;
+        }
+
+        .nav-bar {
+            position: sticky;
+            top: 0;
+            background: var(--card-background);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            margin-bottom: 20px;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            padding: 12px 20px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: var(--system-background);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            color: var(--system-blue);
+            background: var(--system-background);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .nav-text {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .nav-bar {
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-link">
+                <span class="nav-icon">🍽️</span>
+                <span class="nav-text">营养搭配</span>
+            </a>
+            <a href="quiz.html" class="nav-link">
+                <span class="nav-icon">📝</span>
+                <span class="nav-text">营养知识</span>
+            </a>
+            <a href="fluid.html" class="nav-link">
+                <span class="nav-icon">💧</span>
+                <span class="nav-text">水分管理</span>
+            </a>
+        </div>
+    </nav>
+    <div class="game-header">
+        <h1>健康饮食小游戏</h1>
+        <div class="subtitle">来玩一玩！选择你喜欢的食物，让我们一起打造健康餐盘 🍽️</div>
+    </div>
+    <div class="container">
+        <div class="food-list" id="foodList">
+            <h3>可选食物</h3>
+        </div>
+        <div class="selected-foods" id="selectedFoods">
+            <h3>已选食物</h3>
+        </div>
+    </div>
+    <div class="buttons">
+        <button class="check" onclick="checkNutrition()">检查营养</button>
+        <button class="reset" onclick="resetSelection()">重置选择</button>
+    </div>
+    <div class="output" id="output"></div>
+
+    <script>
+        const testFoods = [
+            { 
+                name: "香蕉", 
+                icon: "🍌",
+                category: "水果",
+                potassium: 400, 
+                protein: 1, 
+                phosphorus: 20, 
+                sodium: 1,
+                description: "香甜可口的水果，补充能量",
+                benefits: ["补充能量", "含钾丰富"]
+            },
+            { 
+                name: "鸡胸肉", 
+                icon: "🍗",
+                category: "肉类",
+                protein: 30, 
+                potassium: 300, 
+                phosphorus: 200, 
+                sodium: 70,
+                description: "优质蛋白来源",
+                benefits: ["增强肌肉", "补充蛋白质"]
+            },
+            { 
+                name: "薯片", 
+                icon: "🥔",
+                category: "零食",
+                sodium: 800, 
+                potassium: 100, 
+                protein: 2, 
+                phosphorus: 50,
+                description: "少量食用的零食",
+                benefits: ["适量享用"]
+            },
+            { name: "三文鱼", protein: 25, potassium: 500, phosphorus: 300, sodium: 60 },
+            { name: "豆腐", protein: 8, potassium: 120, phosphorus: 150, sodium: 7 },
+            { name: "西兰花", protein: 3, potassium: 320, phosphorus: 67, sodium: 33 }
+        ];
+
+        class FoodDragGame {
+            constructor(foods) {
+                this.foods = foods;
+                this.selected = [];
+                this.nutrientLimits = {
+                    potassium: { min: 1500, max: 2000, name: '钾', unit: 'mg' },
+                    protein: { min: 60, max: 80, name: '蛋白质', unit: 'g' },
+                    phosphorus: { min: 800, max: 1000, name: '磷', unit: 'mg' },
+                    sodium: { min: 1500, max: 2000, name: '钠', unit: 'mg' }
+                };
+            }
+
+            checkNutrition() {
+                const nutrients = Object.keys(this.nutrientLimits).reduce((acc, nutrient) => {
+                    acc[nutrient] = 0;
+                    return acc;
+                }, {});
+
+                this.selected.forEach(food => {
+                    Object.keys(nutrients).forEach(nutrient => {
+                        nutrients[nutrient] += food[nutrient] || 0;
+                    });
+                });
+
+                return {
+                    isBalanced: this.checkNutrientBalance(nutrients),
+                    warnings: this.generateWarnings(nutrients),
+                    nutrients
+                };
+            }
+
+            checkNutrientBalance(nutrients) {
+                return Object.entries(nutrients).every(([nutrient, value]) => 
+                    value >= this.nutrientLimits[nutrient].min && 
+                    value <= this.nutrientLimits[nutrient].max
+                );
+            }
+
+            generateWarnings(nutrients) {
+                const warnings = [];
+                
+                Object.entries(this.nutrientLimits).forEach(([key, limit]) => {
+                    const value = nutrients[key];
+                    if (value < limit.min) {
+                        warnings.push({
+                            message: `${limit.name}含量不足（${value}${limit.unit}），建议添加富含${limit.name}的食物`,
+                            severity: 'warning',
+                            nutrient: key
+                        });
+                    }
+                    if (value > limit.max) {
+                        warnings.push({
+                            message: `${limit.name}含量过高（${value}${limit.unit}），建议减少富含${limit.name}的食物`,
+                            severity: 'error',
+                            nutrient: key
+                        });
+                    }
+                });
+                return warnings;
+            }
+        }
+
+        const game = new FoodDragGame(testFoods);
+        
+        function formatNutrients(food) {
+            return Object.entries(game.nutrientLimits).map(([key, limit]) => {
+                const value = food[key] || 0;
+                const percentage = (value / limit.max) * 100;
+                let indicator = '⚪'; // neutral
+                if (percentage > 30) indicator = '🟢'; // good source
+                if (percentage > 60) indicator = '⭐'; // excellent source
+                
+                return `
+                    <div class="nutrient-item">
+                        <div class="nutrient-label">
+                            <span>${limit.name}</span>
+                            <span>${indicator} ${value}${limit.unit}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createFoodItem(food, onClick) {
+            const div = document.createElement('div');
+            div.className = 'food-item';
+            div.innerHTML = `
+                <div class="food-name">
+                    <span class="food-icon-large">${food.icon}</span>
+                    <div class="food-info">
+                        <div class="food-title">${food.name}</div>
+                        <span class="food-category">${food.category || '其他'}</span>
+                    </div>
+                </div>
+                <div class="food-benefits">
+                    ${(food.benefits || []).map(benefit => 
+                        `<span class="benefit-tag">✨ ${benefit}</span>`
+                    ).join('')}
+                </div>
+                <div class="food-details">${formatNutrients(food)}</div>
+            `;
+            div.onclick = onClick;
+            return div;
+        }
+
+        function updateUI() {
+            const foodList = document.getElementById('foodList');
+            const selectedList = document.getElementById('selectedFoods');
+            
+            foodList.innerHTML = '<h3>可选食物</h3>';
+            selectedList.innerHTML = '<h3>已选食物</h3>';
+            
+            testFoods.forEach(food => {
+                const div = createFoodItem(food, () => {
+                    div.style.animation = 'pulse 0.3s ease-out';
+                    game.selected.push(food);
+                    updateUI();
+                    setTimeout(() => div.style.animation = '', 300);
+                });
+                foodList.appendChild(div);
+            });
+
+            game.selected.forEach((food, index) => {
+                const div = createFoodItem(food, () => {
+                    div.style.animation = 'pulse 0.3s ease-out';
+                    game.selected.splice(index, 1);
+                    updateUI();
+                    setTimeout(() => div.style.animation = '', 300);
+                });
+                selectedList.appendChild(div);
+            });
+        }
+
+        function checkNutrition() {
+            const result = game.checkNutrition();
+            const output = document.getElementById('output');
+            
+            let overallFeedback = '';
+            if (result.isBalanced) {
+                overallFeedback = `
+                    <div class="success-message">
+                        <h3>太棒了！ 🎉</h3>
+                        <p>你的搭配非常健康！继续保持哦！</p>
+                        <div class="achievement">🏆 营养达人</div>
+                    </div>
+                `;
+            } else {
+                overallFeedback = `
+                    <div class="feedback-message">
+                        <h3>继续加油！ 💪</h3>
+                        <p>让我们一起改进餐盘搭配</p>
+                    </div>
+                `;
+            }
+
+            // Simplified warnings with friendly suggestions
+            const suggestions = result.warnings.map(w => {
+                const foods = testFoods
+                    .filter(f => f[w.nutrient] > 0)
+                    .map(f => f.icon + f.name)
+                    .slice(0, 3)
+                    .join('、');
+                    
+                return `
+                    <div class="suggestion-item">
+                        <div class="suggestion-icon">💡</div>
+                        <div class="suggestion-text">
+                            试试添加这些食物：${foods}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            output.innerHTML = `
+                <div class="results-container">
+                    ${overallFeedback}
+                    <div class="suggestions">
+                        ${suggestions}
+                    </div>
+                </div>
+            `;
+        }
+
+        function resetSelection() {
+            game.selected = [];
+            updateUI();
+            document.getElementById('output').innerHTML = '';
+        }
+
+        updateUI();
+    </script>
+    <script src="js/navigation.js"></script>
+</body>
+</html> 

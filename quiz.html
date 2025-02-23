@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>透析营养知识问答</title>
+    <style>
+        :root {
+            --system-gray: #8E8E93;
+            --system-green: #34C759;
+            --system-red: #FF3B30;
+            --system-orange: #FF9F0A;
+            --system-blue: #007AFF;
+            --system-background: #FFFFFF;
+            --card-background: #F2F2F7;
+            --text-primary: #000000;
+            --text-secondary: #6C6C70;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --system-background: #FFFFFF;
+                --card-background: #F2F2F7;
+                --text-primary: #000000;
+                --text-secondary: #6C6C70;
+            }
+        }
+
+        body {
+            font-family: -apple-system, "SF Pro SC", "SF Pro Text", "SF Pro Icons",
+                "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--system-background);
+            color: var(--text-primary);
+        }
+
+        .quiz-container {
+            background: var(--card-background);
+            border-radius: 20px;
+            padding: 24px;
+            margin: 20px 0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--system-gray);
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--system-blue);
+            transition: width 0.3s ease;
+        }
+
+        .question {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .option {
+            background: var(--system-background);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option:hover {
+            border-color: var(--system-blue);
+            transform: translateY(-2px);
+        }
+
+        .option.correct {
+            background: rgba(52, 199, 89, 0.1);
+            border-color: var(--system-green);
+        }
+
+        .option.wrong {
+            background: rgba(255, 59, 48, 0.1);
+            border-color: var(--system-red);
+        }
+
+        .explanation {
+            background: var(--system-background);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+            font-size: 15px;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .explanation.visible {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .score {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .icon {
+            font-size: 24px;
+        }
+
+        .nav-bar {
+            position: sticky;
+            top: 0;
+            background: var(--card-background);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            margin-bottom: 20px;
+        }
+
+        .nav-container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            padding: 12px 20px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: var(--system-background);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            color: var(--system-blue);
+            background: var(--system-background);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .nav-text {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .nav-bar {
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-link">
+                <span class="nav-icon">🍽️</span>
+                <span class="nav-text">营养搭配</span>
+            </a>
+            <a href="quiz.html" class="nav-link">
+                <span class="nav-icon">📝</span>
+                <span class="nav-text">营养知识</span>
+            </a>
+            <a href="fluid.html" class="nav-link">
+                <span class="nav-icon">💧</span>
+                <span class="nav-text">水分管理</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="quiz-container">
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="score">得分: <span id="score">0</span></div>
+        <div id="question-container"></div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "透析患者应该限制哪种矿物质的摄入？",
+                options: [
+                    { text: "钾", icon: "🥔", correct: true },
+                    { text: "维生素C", icon: "🍊", correct: false },
+                    { text: "铁", icon: "🥩", correct: false },
+                    { text: "锌", icon: "🥜", correct: false }
+                ],
+                explanation: "透析患者需要限制钾的摄入，因为肾功能受损会导致钾在体内积累。高钾血症可能导致严重的健康问题。"
+            },
+            {
+                question: "以下哪种食物最适合透析患者食用？",
+                options: [
+                    { text: "香蕉", icon: "🍌", correct: false },
+                    { text: "苹果", icon: "🍎", correct: true },
+                    { text: "橙子", icon: "🍊", correct: false },
+                    { text: "西瓜", icon: "🍉", correct: false }
+                ],
+                explanation: "苹果含钾量相对较低，是透析患者较好的水果选择。而香蕉、橙子和西瓜都含有较高的钾。"
+            },
+            {
+                question: "透析患者每天的蛋白质摄入量应该是多少？",
+                options: [
+                    { text: "20-30克", icon: "🥚", correct: false },
+                    { text: "40-50克", icon: "🥩", correct: false },
+                    { text: "60-80克", icon: "🍗", correct: true },
+                    { text: "100克以上", icon: "🥩", correct: false }
+                ],
+                explanation: "透析患者需要适量增加蛋白质摄入，建议每天摄入60-80克优质蛋白质，以补充透析过程中流失的蛋白质。"
+            }
+            // Add more questions as needed
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        const questionContainer = document.getElementById('question-container');
+        const scoreElement = document.getElementById('score');
+        const progressFill = document.querySelector('.progress-fill');
+
+        function showQuestion(index) {
+            const question = questions[index];
+            progressFill.style.width = `${(index / questions.length) * 100}%`;
+            
+            questionContainer.innerHTML = `
+                <div class="question">${question.question}</div>
+                <div class="options">
+                    ${question.options.map((option, i) => `
+                        <div class="option" onclick="checkAnswer(${i})">
+                            <span class="icon">${option.icon}</span>
+                            ${option.text}
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="explanation" id="explanation">
+                    ${question.explanation}
+                </div>
+            `;
+        }
+
+        function checkAnswer(selectedIndex) {
+            const question = questions[currentQuestion];
+            const options = questionContainer.querySelectorAll('.option');
+            const explanation = document.getElementById('explanation');
+            
+            options.forEach((option, i) => {
+                option.onclick = null;
+                if (question.options[i].correct) {
+                    option.classList.add('correct');
+                } else if (i === selectedIndex) {
+                    option.classList.add('wrong');
+                }
+            });
+
+            if (question.options[selectedIndex].correct) {
+                score += 10;
+                scoreElement.textContent = score;
+            }
+
+            explanation.classList.add('visible');
+
+            setTimeout(() => {
+                currentQuestion++;
+                if (currentQuestion < questions.length) {
+                    showQuestion(currentQuestion);
+                } else {
+                    showFinalScore();
+                }
+            }, 2000);
+        }
+
+        function showFinalScore() {
+            const percentage = (score / (questions.length * 10)) * 100;
+            questionContainer.innerHTML = `
+                <div style="text-align: center;">
+                    <h2>测试完成！</h2>
+                    <div style="font-size: 48px; margin: 20px 0;">
+                        ${percentage >= 80 ? '🏆' : percentage >= 60 ? '👍' : '💪'}
+                    </div>
+                    <p>你的得分是: ${score}分</p>
+                    <p>${getFeedback(percentage)}</p>
+                    <button onclick="restartQuiz()" 
+                            style="background: var(--system-blue); 
+                                   color: white; 
+                                   border: none; 
+                                   padding: 12px 24px; 
+                                   border-radius: 12px; 
+                                   margin-top: 20px;
+                                   cursor: pointer;">
+                        重新开始
+                    </button>
+                </div>
+            `;
+        }
+
+        function getFeedback(percentage) {
+            if (percentage >= 80) return "太棒了！你对透析营养知识掌握得很好！";
+            if (percentage >= 60) return "不错！继续加油，还可以做得更好！";
+            return "要继续学习哦！营养知识对健康很重要！";
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            scoreElement.textContent = score;
+            showQuestion(0);
+        }
+
+        showQuestion(0);
+    </script>
+    <script src="js/navigation.js"></script>
+</body>
+</html> 

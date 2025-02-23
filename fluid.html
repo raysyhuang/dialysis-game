@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>每日水分管理小游戏</title>
+    <style>
+        :root {
+            --system-gray: #8E8E93;
+            --system-green: #34C759;
+            --system-red: #FF3B30;
+            --system-orange: #FF9F0A;
+            --system-blue: #007AFF;
+            --system-background: #FFFFFF;
+            --card-background: #F2F2F7;
+            --text-primary: #000000;
+            --text-secondary: #6C6C70;
+            --water-blue: #5AC8FA;
+        }
+
+        body {
+            font-family: -apple-system, "SF Pro SC", "SF Pro Text", "SF Pro Icons",
+                "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--system-background);
+            color: var(--text-primary);
+        }
+
+        .nav-bar {
+            position: sticky;
+            top: 0;
+            background: var(--card-background);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            margin-bottom: 20px;
+        }
+
+        .nav-container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            padding: 12px 20px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: var(--system-background);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            color: var(--system-blue);
+            background: var(--system-background);
+        }
+
+        .game-container {
+            background: var(--card-background);
+            border-radius: 20px;
+            padding: 24px;
+            margin: 20px 0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .water-container {
+            position: relative;
+            width: 200px;
+            height: 300px;
+            margin: 40px auto;
+            border: 4px solid var(--water-blue);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .water-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(180deg, #5AC8FA 0%, #007AFF 100%);
+            transition: height 0.5s ease;
+            border-radius: 0 0 16px 16px;
+        }
+
+        .water-level-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-primary);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .drink-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .drink-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: var(--system-background);
+            color: var(--text-primary);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .drink-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .tips-container {
+            margin-top: 32px;
+            padding: 20px;
+            background: rgba(90, 200, 250, 0.1);
+            border-radius: 16px;
+        }
+
+        .tip-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 12px 0;
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        @keyframes splash {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .warning {
+            color: var(--system-red);
+            text-align: center;
+            margin: 16px 0;
+            font-weight: 600;
+            animation: splash 0.5s ease;
+        }
+
+        .success {
+            color: var(--system-green);
+            text-align: center;
+            margin: 16px 0;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-link">
+                <span class="nav-icon">🍽️</span>
+                <span class="nav-text">营养搭配</span>
+            </a>
+            <a href="quiz.html" class="nav-link">
+                <span class="nav-icon">📝</span>
+                <span class="nav-text">营养知识</span>
+            </a>
+            <a href="fluid.html" class="nav-link active">
+                <span class="nav-icon">💧</span>
+                <span class="nav-text">水分管理</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="game-container">
+        <h2 style="text-align: center; margin-bottom: 24px;">每日水分管理 💧</h2>
+        
+        <div class="water-container">
+            <div class="water-fill" id="waterFill"></div>
+            <div class="water-level-text">
+                <span id="currentAmount">0</span>ml / <span id="dailyLimit">1000</span>ml
+            </div>
+        </div>
+
+        <div id="message"></div>
+
+        <div class="drink-buttons">
+            <button class="drink-button" onclick="addWater(100)">
+                <span>🥤</span> 小杯 (100ml)
+            </button>
+            <button class="drink-button" onclick="addWater(200)">
+                <span>🥛</span> 中杯 (200ml)
+            </button>
+            <button class="drink-button" onclick="addWater(300)">
+                <span>🫖</span> 大杯 (300ml)
+            </button>
+            <button class="drink-button" onclick="resetWater()" style="background: var(--system-red); color: white;">
+                <span>🔄</span> 重置
+            </button>
+        </div>
+
+        <div class="tips-container">
+            <h3>管理小贴士 💡</h3>
+            <div class="tip-item">
+                <span>🌞</span> 建议将每日水量平均分配到各个时段
+            </div>
+            <div class="tip-item">
+                <span>🍎</span> 水果中也含有水分，需要计入每日总量
+            </div>
+            <div class="tip-item">
+                <span>🧊</span> 含冰块和冷饮会增加口渴感，建议少饮
+            </div>
+            <div class="tip-item">
+                <span>🌡️</span> 天热时可以用喷雾或湿毛巾降温解渴
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAmount = 0;
+        const dailyLimit = 1000; // 设置每日限制量（ml）
+
+        function updateDisplay() {
+            const waterFill = document.getElementById('waterFill');
+            const currentAmountElement = document.getElementById('currentAmount');
+            const messageElement = document.getElementById('message');
+            
+            const percentage = (currentAmount / dailyLimit) * 100;
+            waterFill.style.height = `${Math.min(percentage, 100)}%`;
+            currentAmountElement.textContent = currentAmount;
+
+            if (percentage >= 100) {
+                messageElement.innerHTML = `
+                    <div class="warning">⚠️ 已达到每日限制量！请注意控制水分摄入。</div>
+                `;
+            } else if (percentage >= 80) {
+                messageElement.innerHTML = `
+                    <div class="warning">⚠️ 接近限制量，请谨慎饮水！</div>
+                `;
+            } else if (percentage >= 50) {
+                messageElement.innerHTML = `
+                    <div class="success">👍 记得均匀分配剩余水量！</div>
+                `;
+            } else {
+                messageElement.innerHTML = '';
+            }
+        }
+
+        function addWater(amount) {
+            if (currentAmount + amount > dailyLimit) {
+                document.getElementById('message').innerHTML = `
+                    <div class="warning">⚠️ 超出限制！请选择更小的量</div>
+                `;
+                return;
+            }
+            
+            currentAmount += amount;
+            updateDisplay();
+            
+            // 保存到本地存储
+            localStorage.setItem('waterAmount', currentAmount);
+        }
+
+        function resetWater() {
+            currentAmount = 0;
+            updateDisplay();
+            localStorage.setItem('waterAmount', 0);
+        }
+
+        // 页面加载时检查本地存储
+        window.onload = function() {
+            const saved = localStorage.getItem('waterAmount');
+            if (saved) {
+                currentAmount = parseInt(saved);
+                updateDisplay();
+            }
+            document.getElementById('dailyLimit').textContent = dailyLimit;
+        };
+    </script>
+</body>
+</html> 
