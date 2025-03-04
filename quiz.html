@@ -316,6 +316,39 @@
                 background: var(--card-background);
             }
         }
+
+        .next-button {
+            background: var(--system-blue);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            margin-top: 16px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .next-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .next-button.visible {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .next-button {
+                width: auto;
+                min-width: 200px;
+                margin: 16px auto 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -388,6 +421,9 @@
                 <div class="explanation" id="explanation">
                     ${question.explanation}
                 </div>
+                <button class="next-button" id="nextButton" onclick="nextQuestion()" style="display: none;">
+                    ${currentQuestion === QUESTIONS_PER_SESSION - 1 ? '查看结果' : '下一题'}
+                </button>
             `;
         }
 
@@ -395,6 +431,7 @@
             const question = selectedQuestions[currentQuestion];
             const options = questionContainer.querySelectorAll('.option');
             const explanation = document.getElementById('explanation');
+            const nextButton = document.getElementById('nextButton');
             
             options.forEach((option, i) => {
                 option.onclick = null;
@@ -406,20 +443,22 @@
             });
 
             if (question.options[selectedIndex].correct) {
-                score += 1; // Changed from 10 to 1
+                score += 1;
                 scoreElement.textContent = score;
             }
 
             explanation.classList.add('visible');
+            nextButton.style.display = 'block';
+            nextButton.classList.add('visible');
+        }
 
-            setTimeout(() => {
-                currentQuestion++;
-                if (currentQuestion < QUESTIONS_PER_SESSION) {
-                    showQuestion(currentQuestion);
-                } else {
-                    showFinalScore();
-                }
-            }, 2000);
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < QUESTIONS_PER_SESSION) {
+                showQuestion(currentQuestion);
+            } else {
+                showFinalScore();
+            }
         }
 
         function showFinalScore() {
