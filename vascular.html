@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>透析患者血管通路护理游戏</title>
+    <style>
+        :root {
+            /* Apple System Colors */
+            --system-gray: #8E8E93;
+            --system-gray2: #AEAEB2;
+            --system-gray3: #C7C7CC;
+            --system-gray4: #D1D1D6;
+            --system-gray5: #E5E5EA;
+            --system-gray6: #F2F2F7;
+            --system-blue: #007AFF;
+            --system-green: #34C759;
+            --system-red: #FF3B30;
+            --system-orange: #FF9F0A;
+            --system-background: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #6C6C70;
+            --vascular-red: #FF3B30;
+            --vascular-blue: #5AC8FA;
+        }
+
+        body {
+            font-family: -apple-system, "SF Pro SC", "SF Pro Text", "SF Pro Icons",
+                "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+            background: var(--system-background);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .nav-bar {
+            position: sticky;
+            top: 0;
+            background: rgba(242, 242, 247, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            margin-bottom: 20px;
+        }
+
+        .nav-container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 12px 16px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: var(--system-gray6);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            color: var(--system-blue);
+            background: var(--system-gray6);
+            font-weight: 600;
+        }
+
+        .header {
+            text-align: center;
+            padding: 32px 20px;
+        }
+
+        .title {
+            font-size: 34px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(135deg, var(--vascular-red), var(--vascular-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 17px;
+            margin-top: 12px;
+            font-weight: 400;
+            letter-spacing: -0.2px;
+        }
+
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: var(--system-gray6);
+            border-radius: 24px;
+            padding: 32px;
+            margin: 20px 0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .scenario-container {
+            position: relative;
+            margin: 24px 0;
+        }
+
+        .scenario-image {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            margin: 0 auto;
+            display: block;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .scenario-description {
+            margin: 28px 0;
+            font-size: 17px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            font-weight: 400;
+            letter-spacing: -0.2px;
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .option-button {
+            background: var(--system-background);
+            border: 1.5px solid var(--system-gray4);
+            border-radius: 16px;
+            padding: 20px;
+            font-size: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            font-weight: 400;
+            color: var(--text-primary);
+            letter-spacing: -0.2px;
+        }
+
+        .option-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            border-color: var(--system-gray3);
+        }
+
+        .option-button.correct {
+            border-color: var(--system-green);
+            background-color: rgba(52, 199, 89, 0.08);
+        }
+
+        .option-button.incorrect {
+            border-color: var(--system-red);
+            background-color: rgba(255, 59, 48, 0.08);
+        }
+
+        .feedback {
+            margin-top: 24px;
+            padding: 20px;
+            border-radius: 16px;
+            font-size: 16px;
+            line-height: 1.6;
+            display: none;
+            font-weight: 400;
+            letter-spacing: -0.2px;
+        }
+
+        .feedback.correct {
+            background-color: rgba(52, 199, 89, 0.08);
+            border: 1.5px solid var(--system-green);
+            color: var(--system-green);
+        }
+
+        .feedback.incorrect {
+            background-color: rgba(255, 59, 48, 0.08);
+            border: 1.5px solid var(--system-red);
+            color: var(--system-red);
+        }
+
+        .next-button {
+            background: var(--system-blue);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 16px 32px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+            display: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: -0.2px;
+        }
+
+        .next-button:hover {
+            background: #0062CC;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--system-gray6);
+            border-radius: 4px;
+            margin: 24px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--vascular-blue), var(--vascular-red));
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .score-container {
+            text-align: center;
+            font-size: 19px;
+            margin: 24px 0;
+            color: var(--text-secondary);
+            font-weight: 400;
+            letter-spacing: -0.2px;
+        }
+
+        .score-value {
+            font-weight: 600;
+            color: var(--system-blue);
+        }
+
+        .result-container {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .result-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+
+        .result-message {
+            font-size: 17px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            color: var(--text-secondary);
+            font-weight: 400;
+            letter-spacing: -0.2px;
+        }
+
+        .restart-button {
+            background: var(--system-blue);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 16px 32px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: -0.2px;
+        }
+
+        .restart-button:hover {
+            background: #0062CC;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 28px;
+            }
+            
+            .card {
+                padding: 24px;
+                border-radius: 20px;
+            }
+
+            .nav-container {
+                padding: 8px 12px;
+            }
+
+            .nav-link {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+
+            .scenario-description {
+                font-size: 16px;
+            }
+
+            .option-button {
+                padding: 16px;
+                font-size: 15px;
+            }
+
+            .feedback {
+                padding: 16px;
+                font-size: 15px;
+            }
+
+            .next-button,
+            .restart-button {
+                padding: 14px 28px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-link">
+                <span>🏠</span>
+                <span>首页</span>
+            </a>
+            <a href="vascular.html" class="nav-link active">
+                <span>🩸</span>
+                <span>血管通路护理</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <div class="header">
+            <h1 class="title">血管通路护理游戏</h1>
+            <p class="subtitle">学习如何正确护理您的血管通路，避免感染和并发症</p>
+        </div>
+
+        <div class="card">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="score-container">
+                得分: <span class="score-value" id="scoreValue">0</span>
+            </div>
+
+            <div class="scenario-container" id="scenarioContainer">
+                <!-- Scenario content will be inserted here by JavaScript -->
+            </div>
+
+            <div class="result-container" id="resultContainer">
+                <div class="result-title">游戏结束!</div>
+                <div class="result-message" id="resultMessage"></div>
+                <button class="restart-button" id="restartButton">重新开始</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const scenarios = [
+            {
+                id: 1,
+                type: "动静脉瘘管",
+                image: "https://placehold.co/400x300/5AC8FA/FFFFFF?text=动静脉瘘管护理",
+                description: "您刚刚完成了透析治疗，护士已经拔除了穿刺针并按压止血。您应该如何护理穿刺部位?",
+                options: [
+                    {
+                        text: "立即用力按压穿刺部位，直到完全止血",
+                        correct: false,
+                        feedback: "过度用力按压可能会损伤血管或导致血栓形成。应该使用适当的压力按压直到止血。"
+                    },
+                    {
+                        text: "轻轻按压穿刺部位约10-15分钟，直到完全止血",
+                        correct: true,
+                        feedback: "正确！轻轻按压穿刺部位直到完全止血是正确的做法，这样可以防止出血同时不会损伤血管。"
+                    },
+                    {
+                        text: "不需要按压，让它自然止血",
+                        correct: false,
+                        feedback: "不按压可能会导致持续出血或血肿形成。穿刺部位需要适当按压直到完全止血。"
+                    },
+                    {
+                        text: "用热毛巾敷在穿刺部位",
+                        correct: false,
+                        feedback: "热敷可能会增加出血风险。应该先确保完全止血，如有需要，可以在医生建议下使用冷敷减轻肿胀。"
+                    }
+                ]
+            },
+            {
+                id: 2,
+                type: "动静脉瘘管",
+                image: "https://placehold.co/400x300/5AC8FA/FFFFFF?text=动静脉瘘管日常护理",
+                description: "在日常生活中，您应该如何保护您的动静脉瘘管?",
+                options: [
+                    {
+                        text: "在瘘管手臂上佩戴紧身手表或手镯",
+                        correct: false,
+                        feedback: "紧身的手表或手镯会压迫血管，影响血流，应避免在瘘管手臂佩戴任何紧束物品。"
+                    },
+                    {
+                        text: "用瘘管手臂提重物，锻炼肌肉",
+                        correct: false,
+                        feedback: "瘘管手臂应避免提重物，这可能会损伤血管或导致并发症。"
+                    },
+                    {
+                        text: "每天检查瘘管的震颤(嗡嗡声)和搏动",
+                        correct: true,
+                        feedback: "正确！每天检查瘘管的震颤和搏动是监测瘘管功能的重要方法，如果发现异常应立即就医。"
+                    },
+                    {
+                        text: "在瘘管手臂抽血或测量血压",
+                        correct: false,
+                        feedback: "应避免在瘘管手臂抽血或测量血压，这可能会损伤血管或影响瘘管功能。"
+                    }
+                ]
+            },
+            {
+                id: 3,
+                type: "动静脉瘘管",
+                image: "https://placehold.co/400x300/5AC8FA/FFFFFF?text=瘘管感染预防",
+                description: "以下哪种情况下，您应该立即联系医生?",
+                options: [
+                    {
+                        text: "瘘管部位有轻微瘙痒感",
+                        correct: false,
+                        feedback: "轻微瘙痒可能是正常现象，但如果伴随其他症状或持续加重，应咨询医生。"
+                    },
+                    {
+                        text: "瘘管部位出现红肿、疼痛或有分泌物",
+                        correct: true,
+                        feedback: "正确！这些是感染的典型症状，需要立即就医处理，以防止严重并发症。"
+                    },
+                    {
+                        text: "透析后穿刺部位有轻微瘀青",
+                        correct: false,
+                        feedback: "透析后轻微瘀青是常见的，通常会自行消退，但如果瘀青范围扩大或伴随疼痛，应咨询医生。"
+                    },
+                    {
+                        text: "瘘管手臂皮肤略微干燥",
+                        correct: false,
+                        feedback: "皮肤干燥是常见现象，可以使用医生推荐的保湿产品，但不需要紧急就医。"
+                    }
+                ]
+            },
+            {
+                id: 4,
+                type: "中心静脉导管",
+                image: "https://placehold.co/400x300/FF3B30/FFFFFF?text=中心静脉导管护理",
+                description: "关于中心静脉导管的日常护理，以下哪项做法是正确的?",
+                options: [
+                    {
+                        text: "每天自行更换导管敷料",
+                        correct: false,
+                        feedback: "敷料更换应由专业医护人员在无菌条件下进行，通常每周更换一次或当敷料松动、潮湿或脏污时更换。"
+                    },
+                    {
+                        text: "游泳或洗澡时将导管完全浸入水中",
+                        correct: false,
+                        feedback: "导管部位应保持干燥，洗澡时应避免导管和敷料浸水，游泳通常不推荐。"
+                    },
+                    {
+                        text: "保持导管出口处清洁干燥，避免拉扯",
+                        correct: true,
+                        feedback: "正确！保持导管出口处清洁干燥，避免拉扯是预防感染和导管脱位的关键措施。"
+                    },
+                    {
+                        text: "如果导管堵塞，可以自行注射肝素冲洗",
+                        correct: false,
+                        feedback: "导管堵塞应由专业医护人员处理，不应自行注射任何药物或溶液。"
+                    }
+                ]
+            },
+            {
+                id: 5,
+                type: "中心静脉导管",
+                image: "https://placehold.co/400x300/FF3B30/FFFFFF?text=导管感染预防",
+                description: "以下哪种情况表明您的中心静脉导管可能出现了感染?",
+                options: [
+                    {
+                        text: "导管周围皮肤发红、肿胀或有分泌物",
+                        correct: true,
+                        feedback: "正确！这些是导管相关感染的典型症状，需要立即就医。"
+                    },
+                    {
+                        text: "透析时导管内血流速度略有减慢",
+                        correct: false,
+                        feedback: "血流速度减慢可能与导管位置或血栓有关，但不一定是感染的表现。不过，应向医护人员报告这种情况。"
+                    },
+                    {
+                        text: "导管敷料边缘略微松动",
+                        correct: false,
+                        feedback: "敷料松动需要更换，但不一定表示感染。不过，松动的敷料可能增加感染风险。"
+                    },
+                    {
+                        text: "透析后感到轻微疲劳",
+                        correct: false,
+                        feedback: "透析后疲劳是常见的，通常与透析过程有关，而不是导管感染的特定症状。"
+                    }
+                ]
+            },
+            {
+                id: 6,
+                type: "一般护理",
+                image: "https://placehold.co/400x300/34C759/FFFFFF?text=血管通路一般护理",
+                description: "关于血管通路的一般护理原则，以下哪项说法是正确的?",
+                options: [
+                    {
+                        text: "血管通路部位可以随意涂抹各种护肤品",
+                        correct: false,
+                        feedback: "血管通路部位应避免使用未经医生批准的护肤品，某些成分可能刺激皮肤或影响血管功能。"
+                    },
+                    {
+                        text: "定期自我检查血管通路的功能是不必要的",
+                        correct: false,
+                        feedback: "定期自我检查血管通路功能是非常重要的，可以及早发现问题并寻求医疗帮助。"
+                    },
+                    {
+                        text: "血管通路部位出现任何异常都应咨询医生",
+                        correct: true,
+                        feedback: "正确！任何异常情况如红肿、疼痛、分泌物、震颤减弱或消失等都应立即咨询医生。"
+                    },
+                    {
+                        text: "血管通路部位可以接受按摩以促进血液循环",
+                        correct: false,
+                        feedback: "应避免对血管通路部位进行按摩，这可能会损伤血管或导致血栓形成。"
+                    }
+                ]
+            },
+            {
+                id: 7,
+                type: "一般护理",
+                image: "https://placehold.co/400x300/34C759/FFFFFF?text=血管通路保护",
+                description: "在日常生活中，以下哪种行为有助于保护您的血管通路?",
+                options: [
+                    {
+                        text: "保持良好的个人卫生，勤洗手",
+                        correct: true,
+                        feedback: "正确！良好的个人卫生，特别是勤洗手，可以减少感染风险，保护血管通路。"
+                    },
+                    {
+                        text: "在血管通路手臂进行剧烈运动",
+                        correct: false,
+                        feedback: "应避免血管通路手臂进行剧烈运动，这可能会损伤血管或导致并发症。"
+                    },
+                    {
+                        text: "穿紧身衣物以保护血管通路部位",
+                        correct: false,
+                        feedback: "应避免穿紧身衣物，特别是在血管通路部位，因为这可能会压迫血管，影响血流。"
+                    },
+                    {
+                        text: "用血管通路手臂睡觉时压在身下",
+                        correct: false,
+                        feedback: "睡觉时应避免压在血管通路手臂上，这可能会影响血流或导致血管损伤。"
+                    }
+                ]
+            },
+            {
+                id: 8,
+                type: "一般护理",
+                image: "https://placehold.co/400x300/34C759/FFFFFF?text=血管通路并发症",
+                description: "以下哪种情况可能表明您的血管通路出现了严重问题，需要紧急就医?",
+                options: [
+                    {
+                        text: "透析后穿刺部位有少量渗血",
+                        correct: false,
+                        feedback: "透析后少量渗血是常见的，通常会在适当按压后停止。但如果持续出血，应寻求帮助。"
+                    },
+                    {
+                        text: "血管通路部位的震颤或搏动突然消失",
+                        correct: true,
+                        feedback: "正确！震颤或搏动突然消失可能表明血管通路堵塞或血栓形成，这是紧急情况，需要立即就医。"
+                    },
+                    {
+                        text: "血管通路手臂偶尔感到轻微刺痛",
+                        correct: false,
+                        feedback: "偶尔的轻微刺痛可能是正常的，但如果疼痛持续或加重，应咨询医生。"
+                    },
+                    {
+                        text: "透析结束后感到疲劳",
+                        correct: false,
+                        feedback: "透析后疲劳是常见的反应，通常与透析过程有关，而不是血管通路问题的特定症状。"
+                    }
+                ]
+            }
+        ];
+
+        // Game variables
+        let currentScenarioIndex = 0;
+        let score = 0;
+        let selectedOption = null;
+
+        // DOM elements
+        const scenarioContainer = document.getElementById('scenarioContainer');
+        const progressBar = document.getElementById('progressBar');
+        const scoreValue = document.getElementById('scoreValue');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultMessage = document.getElementById('resultMessage');
+        const restartButton = document.getElementById('restartButton');
+
+        // Initialize game
+        function initGame() {
+            currentScenarioIndex = 0;
+            score = 0;
+            updateScore();
+            showScenario(currentScenarioIndex);
+            resultContainer.style.display = 'none';
+            updateProgressBar();
+        }
+
+        // Show scenario
+        function showScenario(index) {
+            if (index >= scenarios.length) {
+                showResults();
+                return;
+            }
+
+            const scenario = scenarios[index];
+            
+            // Create scenario HTML
+            let scenarioHTML = `
+                <img src="${scenario.image}" alt="${scenario.type}" class="scenario-image">
+                <div class="scenario-description">${scenario.description}</div>
+                <div class="options-container">
+            `;
+
+            // Add options
+            scenario.options.forEach((option, optionIndex) => {
+                scenarioHTML += `
+                    <button class="option-button" data-index="${optionIndex}">
+                        ${option.text}
+                    </button>
+                `;
+            });
+
+            // Add feedback and next button
+            scenarioHTML += `
+                </div>
+                <div class="feedback" id="feedback"></div>
+                <button class="next-button" id="nextButton">下一题</button>
+            `;
+
+            // Set HTML and add event listeners
+            scenarioContainer.innerHTML = scenarioHTML;
+            
+            // Add event listeners to option buttons
+            document.querySelectorAll('.option-button').forEach(button => {
+                button.addEventListener('click', handleOptionClick);
+            });
+
+            // Add event listener to next button
+            document.getElementById('nextButton').addEventListener('click', handleNextClick);
+        }
+
+        // Handle option click
+        function handleOptionClick(event) {
+            if (selectedOption !== null) return; // Already selected an option
+            
+            selectedOption = parseInt(event.currentTarget.dataset.index);
+            const scenario = scenarios[currentScenarioIndex];
+            const option = scenario.options[selectedOption];
+            
+            // Mark all options as disabled
+            document.querySelectorAll('.option-button').forEach(button => {
+                button.disabled = true;
+            });
+            
+            // Mark selected option as correct or incorrect
+            event.currentTarget.classList.add(option.correct ? 'correct' : 'incorrect');
+            
+            // Show feedback
+            const feedbackElement = document.getElementById('feedback');
+            feedbackElement.textContent = option.feedback;
+            feedbackElement.classList.add(option.correct ? 'correct' : 'incorrect');
+            feedbackElement.style.display = 'block';
+            
+            // Show next button
+            document.getElementById('nextButton').style.display = 'block';
+            
+            // Update score if correct
+            if (option.correct) {
+                score++;
+                updateScore();
+            }
+        }
+
+        // Handle next button click
+        function handleNextClick() {
+            selectedOption = null;
+            currentScenarioIndex++;
+            showScenario(currentScenarioIndex);
+            updateProgressBar();
+        }
+
+        // Update score display
+        function updateScore() {
+            scoreValue.textContent = score;
+        }
+
+        // Update progress bar
+        function updateProgressBar() {
+            const progress = (currentScenarioIndex / scenarios.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        // Show results
+        function showResults() {
+            scenarioContainer.style.display = 'none';
+            resultContainer.style.display = 'block';
+            
+            const percentage = (score / scenarios.length) * 100;
+            let message = '';
+            
+            if (percentage >= 80) {
+                message = `恭喜！您获得了 ${score}/${scenarios.length} 分。您对血管通路护理有很好的了解，继续保持！`;
+            } else if (percentage >= 60) {
+                message = `不错！您获得了 ${score}/${scenarios.length} 分。您对血管通路护理有一定了解，但还有提升空间。`;
+            } else {
+                message = `您获得了 ${score}/${scenarios.length} 分。建议您多了解血管通路护理知识，这对您的健康非常重要。`;
+            }
+            
+            resultMessage.textContent = message;
+        }
+
+        // Restart game
+        restartButton.addEventListener('click', initGame);
+
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
