@@ -625,20 +625,100 @@
         });
 
         function displayError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.backgroundColor = '#fee2e2';
+            errorDiv.style.color = '#dc2626';
+            errorDiv.style.padding = '1rem';
+            errorDiv.style.borderRadius = '0.5rem';
+            errorDiv.style.marginTop = '1rem';
+            errorDiv.textContent = message;
+            
+            const container = document.querySelector('.analysis-content');
+            container.insertBefore(errorDiv, container.firstChild);
+            
             analysisSection.style.display = 'block';
-            shared.showTooltip(message);
         }
 
-        fileInput.addEventListener('change', function(e) {
+        // Add this function to check file size
+        function validateFile(file) {
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                throw new Error('文件太大，请选择小于10MB的图片');
+            }
+            if (!file.type.startsWith('image/')) {
+                throw new Error('请选择有效的图片文件');
+            }
+        }
+
+        async function analyzeFood(file) {
+            try {
+                validateFile(file);
+                loading.style.display = 'block';
+                analysisSection.style.display = 'none';
+                
+                // Simulate server delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // 使用模拟数据 - 汉堡包的分析结果
+                const mockData = {
+                    result: {
+                        foods: ['汉堡包', '生菜', '番茄', '洋葱'],
+                        basicNutrition: {
+                            calories: { value: 550, unit: 'kcal' },
+                            protein: { value: 25, unit: 'g' },
+                            fat: { value: 30, unit: 'g' },
+                            carbs: { value: 45, unit: 'g' }
+                        },
+                        dialysisIndicators: {
+                            sodium: { value: 850, unit: 'mg', level: '高', warning: true },
+                            potassium: { value: 450, unit: 'mg', level: '中', warning: false },
+                            phosphorus: { value: 280, unit: 'mg', level: '中', warning: false }
+                        },
+                        suggestions: [
+                            '建议减少食用频率，高钠含量不适合透析患者',
+                            '可以去掉部分面包减少碳水摄入',
+                            '可以增加生菜等低钾蔬菜的比例'
+                        ],
+                        tips: [
+                            '快餐食品通常含有较高的钠和磷',
+                            '建议选择更健康的蛋白质来源',
+                            '可以考虑自制汉堡以控制调味料用量'
+                        ]
+                    }
+                };
+                
+                updateAnalysisDisplay(mockData.result);
+                analysisSection.style.display = 'block';
+            } catch (error) {
+                console.error('Analysis error:', error);
+                displayError(`分析失败: ${error.message}`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Improve base64 conversion
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Add this to handle file input changes
+        fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
+                try {
+                    validateFile(file);
+                    preview.src = URL.createObjectURL(file);
                     preview.style.display = 'block';
-                    analyzeFood(file);
+                    await analyzeFood(file);
+                } catch (error) {
+                    displayError(error.message);
                 }
-                reader.readAsDataURL(file);
             }
         });
 
@@ -684,51 +764,6 @@
                 stopCamera();
                 analyzeFood(file);
             }, 'image/jpeg', 0.8);
-        }
-
-        async function analyzeFood(file) {
-            try {
-                const base64Image = await getBase64(file);
-                
-                loading.style.display = 'block';
-                analysisSection.style.display = 'none';
-
-                const response = await fetch('/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        image: base64Image
-                    })
-                });
-
-                const data = await response.json();
-                console.log('API Response:', data); // Debug log
-
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                updateAnalysisDisplay(data.result);
-                analysisSection.style.display = 'block';
-
-            } catch (error) {
-                console.error('Error:', error);
-                displayError(error.message);
-            } finally {
-                loading.style.display = 'none';
-            }
-        }
-
-        // Helper function to convert file to base64
-        function getBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
         }
 
         // Simplified update function
@@ -822,6 +857,49 @@
             };
             return labels[key] || key;
         }
+
+        // Add this temporary mock data for testing
+        function getMockAnalysisData() {
+            return {
+                foods: ['米饭', '青菜'],
+                basicNutrition: {
+                    calories: { value: 250, unit: 'kcal' },
+                    protein: { value: 8, unit: 'g' },
+                    fat: { value: 3, unit: 'g' },
+                    carbs: { value: 45, unit: 'g' }
+                },
+                dialysisIndicators: {
+                    sodium: { value: 400, unit: 'mg', level: '中', warning: false },
+                    potassium: { value: 200, unit: 'mg', level: '低', warning: false },
+                    phosphorus: { value: 150, unit: 'mg', level: '低', warning: false }
+                },
+                suggestions: ['建议适量食用', '注意控制钠的摄入'],
+                tips: ['每餐要有适量的蛋白质', '建议多吃新鲜蔬菜']
+            };
+        }
+
+        // For testing purposes, you can temporarily modify analyzeFood to use mock data:
+        /*
+        async function analyzeFood(file) {
+            try {
+                validateFile(file);
+                loading.style.display = 'block';
+                analysisSection.style.display = 'none';
+                
+                // Simulate server delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                const mockData = getMockAnalysisData();
+                updateAnalysisDisplay(mockData);
+                analysisSection.style.display = 'block';
+            } catch (error) {
+                console.error('Analysis error:', error);
+                displayError(`分析失败: ${error.message}`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        */
     </script>
 </body>
 </html>
