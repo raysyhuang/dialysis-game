@@ -15,6 +15,15 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app, resources={r"/analyze": {"origins": "*"}})
 
+@app.route('/')
+def home():
+    return jsonify({
+        "status": "running",
+        "endpoints": {
+            "analyze": "/analyze"
+        }
+    })
+
 # Configure OpenAI
 api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:
