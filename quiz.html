@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>透析营养知识问答</title>
+    <title>透析健康知识问答</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         :root {
@@ -100,13 +100,15 @@
         }
 
         .explanation {
-            background: var(--system-background);
+            background: linear-gradient(135deg, rgba(255, 159, 10, 0.05), rgba(0, 122, 255, 0.05));
+            border-left: 4px solid var(--system-orange);
             border-radius: 12px;
-            padding: 16px;
+            padding: 16px 20px;
             margin-top: 20px;
             font-size: 15px;
-            line-height: 1.5;
+            line-height: 1.6;
             display: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .explanation.visible {
@@ -212,23 +214,28 @@
             position: fixed;
             top: 20px;
             left: 20px;
-            padding: 8px 16px;
-            background: var(--system-background);
-            border: none;
-            border-radius: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 15px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            justify-content: center;
+            cursor: pointer;
             transition: all 0.3s ease;
+            z-index: 1000;
+            border: none;
+            color: #333;
         }
 
         .back-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .back-button i {
+            font-size: 20px;
         }
 
         .game-header {
@@ -352,14 +359,15 @@
     </style>
 </head>
 <body>
-    <a href="index.html" class="back-button">
-        <span>&lt;</span>
-    </a>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <button onclick="window.location.href='index.html'" class="back-button">
+        <i class="fas fa-chevron-left"></i>
+    </button>
 
     <!-- Add this game header section -->
     <div class="game-header">
-        <h1>营养知识问答</h1>
-        <p class="subtitle">测试一下你的透析营养知识吧！</p>
+        <h1>透析健康知识问答</h1>
+        <p class="subtitle">测试一下你的透析健康知识吧！</p>
     </div>
 
     <div class="quiz-container">
@@ -486,9 +494,9 @@
         }
 
         function getFeedback(percentage) {
-            if (percentage >= 80) return "太棒了！你对透析营养知识掌握得很好！";
+            if (percentage >= 80) return "太棒了！你对透析健康知识掌握得很好！";
             if (percentage >= 60) return "不错！继续加油，还可以做得更好！";
-            return "要继续学习哦！营养知识对健康很重要！";
+            return "要继续学习哦！掌握知识对健康很重要！";
         }
 
         function restartQuiz() {

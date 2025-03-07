@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>食物分析助手</title>
+    <!-- Add marked library for markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Add Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Add shared styles -->
+    <link href="css/shared.css" rel="stylesheet">
+    <style>
+        :root {
+            /* Alma-inspired color scheme */
+            --primary: #4F46E5;
+            --primary-light: #818CF8;
+            --primary-dark: #3730A3;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --background: #F8FAFC;
+            --surface: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border: #E5E7EB;
+            
+            /* Enhanced shadows */
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-md: 0 8px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12);
+            
+            /* Smooth transitions */
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        :root.dark {
+            --primary: #6366F1;
+            --primary-light: #818CF8;
+            --primary-dark: #4F46E5;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --background: #111827;
+            --surface: #1F2937;
+            --text-primary: #F9FAFB;
+            --text-secondary: #D1D5DB;
+            --border: #374151;
+            
+            /* Adjusted shadows for dark mode */
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.25);
+            --shadow-md: 0 8px 12px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.35);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            transition: var(--transition);
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: var(--surface);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            padding: 24px;
+            margin-top: 2rem;
+            transition: var(--transition);
+        }
+
+        h1 {
+            font-size: 34px;
+            font-weight: 700;
+            margin: 0;
+            text-align: center;
+            background: linear-gradient(120deg, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 17px;
+            margin-top: 8px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            margin: 2rem 0;
+            padding: 24px;
+            background: var(--background);
+            border-radius: 16px;
+        }
+
+        .upload-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 600;
+            transition: var(--transition);
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn.secondary {
+            background-color: var(--success);
+        }
+
+        .btn.secondary:hover {
+            background-color: #059669;
+        }
+
+        .btn.danger {
+            background-color: var(--danger);
+        }
+
+        .btn.danger:hover {
+            background-color: #DC2626;
+        }
+
+        #preview {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 16px;
+            display: none;
+            box-shadow: var(--shadow-md);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .analysis-section {
+            margin-top: 2rem;
+            padding: 24px;
+            border-radius: 16px;
+            background-color: var(--background);
+            display: none;
+        }
+
+        .analysis-section h2 {
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .analysis-content {
+            background-color: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 1.5rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .analysis-content h3 {
+            color: var(--text-primary);
+            margin: 1.5rem 0 1rem;
+            font-size: 20px;
+            font-weight: 600;
+            border-left: 4px solid var(--primary);
+            padding-left: 1rem;
+        }
+
+        .analysis-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .analysis-content p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .analysis-content ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-bottom: 2rem;
+        }
+
+        .analysis-content li {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .analysis-content li:before {
+            content: "✓";
+            color: var(--success);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        .nutrition-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .nutrition-summary-item {
+            background-color: var(--background);
+            padding: 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nutrition-summary-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .nutrition-summary-text {
+            flex: 1;
+        }
+
+        .nutrition-summary-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .nutrition-summary-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .food-tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin: 1rem 0 2rem;
+        }
+
+        .food-tag {
+            background-color: var(--background);
+            padding: 0.75rem 1.25rem;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+            border: 1px solid var(--border);
+        }
+
+        .food-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .food-emoji {
+            font-size: 1.5rem;
+        }
+
+        .food-name {
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            background: var(--background);
+            border-radius: 16px;
+            margin: 2rem 0;
+        }
+
+        .loading p {
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            font-size: 17px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Dark mode toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+        }
+
+        .theme-toggle-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .theme-toggle-btn:hover {
+            background-color: var(--background);
+            color: var(--primary);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+        }
+
+        /* Enhanced camera controls */
+        .camera-container {
+            display: none;
+            width: 100%;
+            max-width: 640px;
+            margin: 1rem auto;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        #camera {
+            width: 100%;
+            border-radius: 12px;
+        }
+
+        .camera-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--surface);
+            border-radius: 0 0 12px 12px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--surface);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 1000;
+            border: none;
+            color: var(--text-primary);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .back-button i {
+            font-size: 20px;
+        }
+
+        /* Add this CSS to make sure all sections are visible */
+        .analysis-section {
+            display: block !important;
+        }
+
+        .analysis-content > h3 {
+            margin-top: 2rem;
+            color: var(--primary);
+        }
+
+        .nutrition-summary-item {
+            background: var(--background);
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        #dietarySuggestions, #healthTips {
+            margin-top: 1rem;
+        }
+
+        #dietarySuggestions li, #healthTips li {
+            margin-bottom: 0.8rem;
+            color: var(--text-primary);
+        }
+
+        .nutrition-level {
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .level-high {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .level-medium {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .level-low {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .warning-icon {
+            color: var(--danger);
+            margin-right: 0.5rem;
+        }
+
+        .warning {
+            border: 2px solid var(--danger);
+            background-color: var(--danger-light);
+        }
+
+        .nutrition-level {
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 0.25rem;
+        }
+
+        .level-高 {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .level-中 {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .level-低 {
+            background-color: var(--success);
+            color: white;
+        }
+
+        /* Add these styles */
+        .nutrition-summary-item {
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .warning {
+            border: 2px solid var(--danger);
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .nutrition-level {
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="window.location.href='index.html'" class="back-button">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    <div class="container">
+        <h1>食物分析助手</h1>
+        <p class="subtitle">上传食物照片，获取营养分析建议</p>
+        <div class="upload-section">
+            <div class="upload-options">
+                <input type="file" id="fileInput" accept="image/*">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-upload"></i>
+                    上传照片
+                </button>
+                <button class="btn secondary" onclick="startCamera()">
+                    <i class="fas fa-camera"></i>
+                    拍照
+                </button>
+            </div>
+            <img id="preview" alt="食物预览">
+            <div class="camera-container" id="cameraContainer">
+                <video id="camera" autoplay playsinline></video>
+                <div class="camera-controls">
+                    <button class="btn" onclick="capturePhoto()">
+                        <i class="fas fa-camera"></i>
+                        拍摄
+                    </button>
+                    <button class="btn danger" onclick="stopCamera()">
+                        <i class="fas fa-times"></i>
+                        取消
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>正在分析您的食物...</p>
+        </div>
+        <div class="analysis-section">
+            <h2>分析结果</h2>
+            <div class="analysis-content">
+                <h3>检测到的食物</h3>
+                <div class="food-tags-container" id="foodTags"></div>
+
+                <h3>营养成分分析</h3>
+                <div class="nutrition-summary" id="basicNutrition"></div>
+
+                <h3>透析患者关键指标</h3>
+                <div class="nutrition-summary" id="dialysisIndicators"></div>
+
+                <h3>饮食建议</h3>
+                <ul id="suggestions"></ul>
+
+                <h3>健康提示</h3>
+                <ul id="tips"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add shared JavaScript -->
+    <script src="js/shared.js"></script>
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const analysisSection = document.querySelector('.analysis-section');
+        const loading = document.querySelector('.loading');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const camera = document.getElementById('camera');
+        let stream = null;
+
+        // Configure marked options
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            sanitize: true
+        });
+
+        function displayError(message) {
+            analysisSection.style.display = 'block';
+            shared.showTooltip(message);
+        }
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    analyzeFood(file);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }
+                });
+                camera.srcObject = stream;
+                preview.style.display = 'none';
+                cameraContainer.style.display = 'block';
+            } catch (error) {
+                displayError('Unable to access camera. Please ensure you have granted camera permissions.');
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            cameraContainer.style.display = 'none';
+            preview.style.display = 'none';
+        }
+
+        function capturePhoto() {
+            if (!stream) return;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = camera.videoWidth;
+            canvas.height = camera.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(camera, 0, 0);
+
+            canvas.toBlob(async (blob) => {
+                const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = 'block';
+                stopCamera();
+                analyzeFood(file);
+            }, 'image/jpeg', 0.8);
+        }
+
+        async function analyzeFood(file) {
+            try {
+                const base64Image = await getBase64(file);
+                
+                loading.style.display = 'block';
+                analysisSection.style.display = 'none';
+
+                const response = await fetch('http://localhost:3003/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image: base64Image
+                    })
+                });
+
+                const data = await response.json();
+                console.log('API Response:', data); // Debug log
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                updateAnalysisDisplay(data.result);
+                analysisSection.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error:', error);
+                displayError(error.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Helper function to convert file to base64
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // Simplified update function
+        function updateAnalysisDisplay(data) {
+            console.log('Received data:', data); // Debug log
+
+            // Update food tags
+            const foodTags = document.getElementById('foodTags');
+            foodTags.innerHTML = data.foods.map(food => `
+                <div class="food-tag">
+                    <span class="food-emoji">🍽️</span>
+                    <span class="food-name">${food}</span>
+                </div>
+            `).join('');
+
+            // Update basic nutrition
+            const basicNutrition = document.getElementById('basicNutrition');
+            basicNutrition.innerHTML = Object.entries(data.basicNutrition).map(([key, info]) => `
+                <div class="nutrition-summary-item">
+                    <div class="nutrition-summary-icon">${getNutritionIcon(key)}</div>
+                    <div class="nutrition-summary-text">
+                        <div class="nutrition-summary-label">${getNutritionLabel(key)}</div>
+                        <div class="nutrition-summary-value">${info.value}${info.unit}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Update dialysis indicators
+            const dialysisIndicators = document.getElementById('dialysisIndicators');
+            dialysisIndicators.innerHTML = Object.entries(data.dialysisIndicators).map(([key, info]) => `
+                <div class="nutrition-summary-item ${info.warning ? 'warning' : ''}">
+                    <div class="nutrition-summary-icon">${getIndicatorIcon(key)}</div>
+                    <div class="nutrition-summary-text">
+                        <div class="nutrition-summary-label">${getIndicatorLabel(key)}</div>
+                        <div class="nutrition-summary-value">
+                            ${info.warning ? '⚠️ ' : ''}${info.value}${info.unit}
+                        </div>
+                        <div class="nutrition-level level-${info.level}">${info.level}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Update suggestions
+            const suggestions = document.getElementById('suggestions');
+            suggestions.innerHTML = data.suggestions.map(suggestion => `
+                <li>${suggestion}</li>
+            `).join('');
+
+            // Update tips
+            const tips = document.getElementById('tips');
+            tips.innerHTML = data.tips.map(tip => `
+                <li>${tip}</li>
+            `).join('');
+        }
+
+        // Helper functions
+        function getNutritionIcon(key) {
+            const icons = {
+                calories: '🔥',
+                protein: '🥩',
+                fat: '🥑',
+                carbs: '🍚'
+            };
+            return icons[key] || '📊';
+        }
+
+        function getNutritionLabel(key) {
+            const labels = {
+                calories: '热量',
+                protein: '蛋白质',
+                fat: '脂肪',
+                carbs: '碳水化合物'
+            };
+            return labels[key] || key;
+        }
+
+        function getIndicatorIcon(key) {
+            const icons = {
+                sodium: '🧂',
+                potassium: '🥬',
+                phosphorus: '🦴'
+            };
+            return icons[key] || '📊';
+        }
+
+        function getIndicatorLabel(key) {
+            const labels = {
+                sodium: '钠',
+                potassium: '钾',
+                phosphorus: '磷'
+            };
+            return labels[key] || key;
+        }
+    </script>
+</body>
+</html>
