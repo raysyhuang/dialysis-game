@@ -37,9 +37,7 @@ def serve_static(path):
 
 # Configure OpenAI
 try:
-    client = openai.OpenAI(
-        api_key=os.getenv('OPENAI_API_KEY')
-    )
+    openai.api_key = os.getenv('OPENAI_API_KEY')
     print("OpenAI client initialized successfully")
 except Exception as e:
     print(f"Error initializing OpenAI client: {str(e)}")
@@ -135,12 +133,12 @@ def analyze_image_with_gpt4(image_base64):
 
         try:
             # Make API call with the defined messages
-            response = client.chat.completions.create(
-                model="gpt-4-vision-preview",
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
                 messages=messages,
                 max_tokens=1500
             )
-            print(f"OpenAI API response status: {response.model_dump()}")
+            print(response)
             
             result = response.choices[0].message.content if response.choices else None
             
@@ -251,7 +249,7 @@ def analyze_food():
             }), 400
 
         # 6. Validate OpenAI API key
-        if not client.api_key:
+        if not openai.api_key:
             print("OpenAI API key not configured")
             return jsonify({
                 'error': 'Server configuration error',
