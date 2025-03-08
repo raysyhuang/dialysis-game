@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import base64
 import os
@@ -12,16 +12,31 @@ import json
 load_dotenv()
 
 # Initialize Flask app
-app = Flask(__name__)
-CORS(app, resources={r"/analyze": {"origins": "*"}})
+app = Flask(__name__, static_folder='.')
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Allow up to 16MB uploads
+
+# Configure CORS properly
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://localhost:3000", "http://localhost:5000", "http://127.0.0.1:5000", "null"],  # Add your origins
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Cache-Control", "Pragma"]
+    }
+})
+
+@app.route('/')
+def home():
+    return send_from_directory('.', 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory('.', path)
 
 # Configure OpenAI
 api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:
-    raise ValueError("OPENAI_API_KEY not found in environment variables")
-
-if api_key.startswith('"') and api_key.endswith('"'):
-    api_key = api_key[1:-1]  # Remove quotes if present
+    raise ValueError("OpenAI API key not found! Please set OPENAI_API_KEY environment variable.")
+print("OpenAI API key found and loaded successfully")
 
 openai.api_key = api_key
 
@@ -46,11 +61,17 @@ def analyze_image_with_gpt4(image_base64):
                 "content": [
                     {
                         "type": "text",
-                        "text": """请分析这张食物图片，并严格按照以下JSON格式返回（只返回JSON，不要其他文字）：
+                        "text": """请分析这张食物图片，并提供详细的营养分析。请特别关注：
+1. 识别图片中的具体食物
+2. 估算营养成分
+3. 评估对透析患者的影响
+4. 提供具体的饮食建议
+
+请按照以下JSON格式返回（只返回JSON，不要其他文字）：
 {
-    "foods": ["食物1", "食物2"],
+    "foods": ["具体食物名称"],
     "basicNutrition": {
-        "calories": {"value": 0, "unit": "千卡"},
+        "calories": {"value": 0, "unit": "kcal"},
         "protein": {"value": 0, "unit": "g"},
         "fat": {"value": 0, "unit": "g"},
         "carbs": {"value": 0, "unit": "g"}
@@ -59,30 +80,30 @@ def analyze_image_with_gpt4(image_base64):
         "sodium": {
             "value": 0,
             "unit": "mg",
-            "level": "低",
+            "level": "低/中/高",
             "warning": false
         },
         "potassium": {
             "value": 0,
             "unit": "mg",
-            "level": "低",
+            "level": "低/中/高",
             "warning": false
         },
         "phosphorus": {
             "value": 0,
             "unit": "mg",
-            "level": "低",
+            "level": "低/中/高",
             "warning": false
         }
     },
     "suggestions": [
-        "建议1",
-        "建议2",
-        "建议3"
+        "针对该食物的具体建议1",
+        "针对该食物的具体建议2",
+        "针对该食物的具体建议3"
     ],
     "tips": [
-        "提示1",
-        "提示2"
+        "健康提示1",
+        "健康提示2"
     ]
 }"""
                     },
@@ -98,10 +119,12 @@ def analyze_image_with_gpt4(image_base64):
 
         # Make API call to OpenAI
         response = openai.chat.completions.create(
-            model="gpt-4o",  # Make sure to use the correct model
+            model="gpt-4o",
             messages=messages,
-            max_tokens=500
+            max_tokens=1000
         )
+        
+        print("OpenAI Response:", response)  # Debug log
         
         result = response.choices[0].message.content if response.choices else None
         
@@ -118,15 +141,15 @@ def analyze_image_with_gpt4(image_base64):
                 return {
                     "foods": ["未能识别食物"],
                     "basicNutrition": {
-                        "calories": {"value": 0, "unit": "千卡"},
-                        "protein": {"value": 0, "unit": "g"},
-                        "fat": {"value": 0, "unit": "g"},
-                        "carbs": {"value": 0, "unit": "g"}
+                        "calories": {"value": 0, "unit": "千卡", "nrv": None},
+                        "protein": {"value": 0, "unit": "g", "nrv": None},
+                        "fat": {"value": 0, "unit": "g", "nrv": None},
+                        "carbs": {"value": 0, "unit": "g", "nrv": None}
                     },
                     "dialysisIndicators": {
-                        "sodium": {"value": 0, "unit": "mg", "level": "低", "warning": false},
-                        "potassium": {"value": 0, "unit": "mg", "level": "低", "warning": false},
-                        "phosphorus": {"value": 0, "unit": "mg", "level": "低", "warning": false}
+                        "sodium": {"value": 0, "unit": "mg", "level": "低", "warning": False, "nrv": None},
+                        "potassium": {"value": 0, "unit": "mg", "level": "低", "warning": False, "nrv": None},
+                        "phosphorus": {"value": 0, "unit": "mg", "level": "低", "warning": False, "nrv": None}
                     },
                     "suggestions": ["请重新尝试分析"],
                     "tips": ["请重新尝试分析"]
@@ -137,24 +160,67 @@ def analyze_image_with_gpt4(image_base64):
         print(f"Analysis error: {str(e)}")
         raise ValueError(f"图片分析错误: {str(e)}")
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "ok"})
+
 @app.route('/analyze', methods=['POST'])
 def analyze_food():
     try:
-        data = request.json
+        print("Received analyze request")  # Debug log
+        if not request.is_json:
+            print("Request is not JSON")
+            return jsonify({'error': '请求格式错误'}), 400
+            
+        data = request.get_json()
+        print("Received request data:", data.keys())  # Debug log
+        
         if not data or 'image' not in data:
+            print("No image in request")
             return jsonify({'error': '未提供图片数据'}), 400
 
+        if not isinstance(data['image'], str):
+            print("Image data is not string")
+            return jsonify({'error': '图片格式错误'}), 400
+
+        # Add size check
+        if len(data['image']) > 10 * 1024 * 1024:  # 10MB limit
+            return jsonify({'error': '图片太大'}), 413
+
+        print("Analyzing image...")  # Debug log
         analysis_result = analyze_image_with_gpt4(data['image'])
+        print("Analysis complete")  # Debug log
+        
         if not analysis_result:
+            print("No analysis result")
             return jsonify({'error': '图片分析失败'}), 500
 
         return jsonify({'result': analysis_result})
 
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': f"发生意外错误: {str(e)}"}), 500
+        print(f"Error processing request: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.errorhandler(Exception)
+def handle_error(error):
+    print(f"Server Error: {str(error)}")
+    return jsonify({
+        'error': '服务器错误，请稍后重试',
+        'details': str(error)
+    }), 500
+
+@app.before_request
+def log_request_info():
+    print('Headers:', dict(request.headers))
+    print('Body:', request.get_data().decode())
+
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Cache-Control,Pragma')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3003))
-    app.run(host='0.0.0.0', port=port) 
+    app.run(host='0.0.0.0', port=port, debug=True) 

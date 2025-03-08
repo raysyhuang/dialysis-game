@@ -625,20 +625,113 @@
         });
 
         function displayError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.backgroundColor = '#fee2e2';
+            errorDiv.style.color = '#dc2626';
+            errorDiv.style.padding = '1rem';
+            errorDiv.style.borderRadius = '0.5rem';
+            errorDiv.style.marginTop = '1rem';
+            errorDiv.textContent = message;
+            
+            const container = document.querySelector('.analysis-content');
+            container.insertBefore(errorDiv, container.firstChild);
+            
             analysisSection.style.display = 'block';
-            shared.showTooltip(message);
         }
 
-        fileInput.addEventListener('change', function(e) {
+        // Add this function to check file size
+        function validateFile(file) {
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                throw new Error('文件太大，请选择小于10MB的图片');
+            }
+            if (!file.type.startsWith('image/')) {
+                throw new Error('请选择有效的图片文件');
+            }
+        }
+
+        async function analyzeFood(file) {
+            try {
+                const base64Image = await getBase64(file);
+                
+                loading.style.display = 'block';
+                analysisSection.style.display = 'none';
+
+                // Send request to server for analysis
+                const response = await fetch('http://localhost:3003/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors',
+                    body: JSON.stringify({
+                        image: base64Image,
+                        timestamp: new Date().getTime()
+                    })
+                });
+
+                console.log('Server response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server error response:', errorText);
+                    throw new Error(`服务器错误: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Server response data:', data);
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (!data.result) {
+                    throw new Error('分析结果为空');
+                }
+
+                clearAnalysisDisplay();
+                updateAnalysisDisplay(data.result);
+                analysisSection.style.display = 'block';
+
+            } catch (error) {
+                console.error('Analysis error:', error);
+                displayError(error.message || '分析失败，请重试');
+                analysisSection.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function clearAnalysisDisplay() {
+            document.getElementById('foodTags').innerHTML = '';
+            document.getElementById('basicNutrition').innerHTML = '';
+            document.getElementById('dialysisIndicators').innerHTML = '';
+            document.getElementById('suggestions').innerHTML = '';
+            document.getElementById('tips').innerHTML = '';
+        }
+
+        // Improve base64 conversion
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Add this to handle file input changes
+        fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
+                try {
+                    validateFile(file);
+                    preview.src = URL.createObjectURL(file);
                     preview.style.display = 'block';
-                    analyzeFood(file);
+                    await analyzeFood(file);
+                } catch (error) {
+                    displayError(error.message);
                 }
-                reader.readAsDataURL(file);
             }
         });
 
@@ -684,51 +777,6 @@
                 stopCamera();
                 analyzeFood(file);
             }, 'image/jpeg', 0.8);
-        }
-
-        async function analyzeFood(file) {
-            try {
-                const base64Image = await getBase64(file);
-                
-                loading.style.display = 'block';
-                analysisSection.style.display = 'none';
-
-                const response = await fetch('http://localhost:3003/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        image: base64Image
-                    })
-                });
-
-                const data = await response.json();
-                console.log('API Response:', data); // Debug log
-
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                updateAnalysisDisplay(data.result);
-                analysisSection.style.display = 'block';
-
-            } catch (error) {
-                console.error('Error:', error);
-                displayError(error.message);
-            } finally {
-                loading.style.display = 'none';
-            }
-        }
-
-        // Helper function to convert file to base64
-        function getBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
         }
 
         // Simplified update function
