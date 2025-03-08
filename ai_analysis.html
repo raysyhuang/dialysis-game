@@ -659,7 +659,7 @@
 
                 // Send request to server for analysis
                 // Instead of: fetch('http://localhost:3000/analyze')
-                const response = await fetch('/analyze', {
+                const response = await fetch('https://dialysis-app-d9690305818a.herokuapp.com/analyze', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -875,7 +875,7 @@
         async function analyzeImage(imageData) {
             try {
                 // Instead of: fetch('http://localhost:3000/analyze')
-                const response = await fetch('/analyze', {
+                const response = await fetch('https://dialysis-app-d9690305818a.herokuapp.com/analyze', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
