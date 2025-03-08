@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from PIL import Image
 import io
 import json
+import sys
 
 # Load environment variables
 load_dotenv()
@@ -43,95 +44,42 @@ openai.api_key = api_key
 
 def analyze_image_with_gpt4(image_base64):
     try:
-        # Check image size
-        image_size = len(image_base64) * 3/4  # Approximate size of decoded base64
-        if image_size > 20 * 1024 * 1024:  # 20MB limit
-            raise ValueError("图片太大，请压缩后重试")
+        # Add validation for image_base64
+        if not image_base64:
+            raise ValueError("Empty image data received")
+            
+        # Debug log image size
+        print(f"Image base64 length: {len(image_base64)}")
+        
+        # Decode base64 image with error handling
+        try:
+            if 'base64,' in image_base64:
+                image_base64 = image_base64.split('base64,')[1]
+            image_data = base64.b64decode(image_base64)
+            print(f"Successfully decoded base64 image, size: {len(image_data)} bytes")
+        except Exception as e:
+            raise ValueError(f"Base64 decoding failed: {str(e)}")
 
-        # Decode base64 image
-        if 'base64,' in image_base64:
-            image_base64 = image_base64.split('base64,')[1]
-        image_data = base64.b64decode(image_base64)
-        
-        # Convert to JPEG format
-        image = Image.open(io.BytesIO(image_data))
-        if image.format not in ['JPEG', 'PNG', 'WEBP']:
-            image = image.convert('RGB')
-            img_byte_arr = io.BytesIO()
-            image.save(img_byte_arr, format='JPEG')
-            image_data = img_byte_arr.getvalue()
-        
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": """请分析这张食物图片，并提供详细的营养分析。请特别关注：
-1. 识别图片中的具体食物
-2. 估算营养成分
-3. 评估对透析患者的影响
-4. 提供具体的饮食建议
+        # Image processing with error handling
+        try:
+            image = Image.open(io.BytesIO(image_data))
+            print(f"Image format: {image.format}, size: {image.size}, mode: {image.mode}")
+        except Exception as e:
+            raise ValueError(f"Image processing failed: {str(e)}")
 
-请按照以下JSON格式返回（只返回JSON，不要其他文字）：
-{
-    "foods": ["具体食物名称"],
-    "basicNutrition": {
-        "calories": {"value": 0, "unit": "kcal"},
-        "protein": {"value": 0, "unit": "g"},
-        "fat": {"value": 0, "unit": "g"},
-        "carbs": {"value": 0, "unit": "g"}
-    },
-    "dialysisIndicators": {
-        "sodium": {
-            "value": 0,
-            "unit": "mg",
-            "level": "低/中/高",
-            "warning": false
-        },
-        "potassium": {
-            "value": 0,
-            "unit": "mg",
-            "level": "低/中/高",
-            "warning": false
-        },
-        "phosphorus": {
-            "value": 0,
-            "unit": "mg",
-            "level": "低/中/高",
-            "warning": false
-        }
-    },
-    "suggestions": [
-        "针对该食物的具体建议1",
-        "针对该食物的具体建议2",
-        "针对该食物的具体建议3"
-    ],
-    "tips": [
-        "健康提示1",
-        "健康提示2"
-    ]
-}"""
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{base64.b64encode(image_data).decode('utf-8')}"
-                        }
-                    }
-                ]
-            }
-        ]
+        # OpenAI API call with better error handling
+        try:
+            response = openai.chat.completions.create(
+                model="gpt-4-vision-preview",  # Make sure this is the correct model name
+                messages=messages,
+                max_tokens=1500
+            )
+            print(f"OpenAI API response status: {response.model_dump()}")
+        except openai.APIError as e:
+            raise ValueError(f"OpenAI API error: {str(e)}")
+        except Exception as e:
+            raise ValueError(f"OpenAI request failed: {str(e)}")
 
-        # Make API call to OpenAI
-        response = openai.chat.completions.create(
-            model="gpt-4",
-            messages=messages,
-            max_tokens=1000
-        )
-        
-        print("OpenAI Response:", response)  # Debug log
-        
         result = response.choices[0].message.content if response.choices else None
         
         # Parse JSON response
@@ -162,12 +110,9 @@ def analyze_image_with_gpt4(image_base64):
                 }
         return None
 
-    except MemoryError:
-        print("Memory error occurred during image processing")
-        raise ValueError("服务器内存不足，请稍后重试或使用较小的图片")
     except Exception as e:
-        print(f"Analysis error: {str(e)}")
-        raise ValueError(f"图片分析错误: {str(e)}")
+        print(f"Detailed analysis error: {type(e).__name__}: {str(e)}")
+        raise
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -176,32 +121,48 @@ def health_check():
 @app.route('/analyze', methods=['POST'])
 def analyze_food():
     try:
-        print("Received analyze request")
+        print("=== Starting new analysis request ===")
+        print(f"Request content type: {request.content_type}")
+        
+        # Validate request format
         if not request.is_json:
-            print("Request is not JSON")
-            return jsonify({'error': '请求格式错误'}), 400
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
             
         data = request.get_json()
-        print("Received request data:", data.keys())
+        print(f"Request data keys: {data.keys() if data else 'None'}")
         
+        # Validate image data
         if not data or 'image' not in data:
-            print("No image in request")
-            return jsonify({'error': '未提供图片数据'}), 400
+            return jsonify({'error': 'Missing image data in request'}), 400
+            
+        image_data = data['image']
+        if not isinstance(image_data, str):
+            return jsonify({'error': 'Image data must be a base64 string'}), 400
 
-        # Add debug logging
-        print("Starting image analysis...")
-        analysis_result = analyze_image_with_gpt4(data['image'])
-        print("Analysis result:", analysis_result)  # Add this line
-        
-        if not analysis_result:
-            print("Analysis returned None")
-            return jsonify({'error': '图片分析失败'}), 500
+        # Environment check
+        print(f"OpenAI API Key configured: {'Yes' if openai.api_key else 'No'}")
+        print(f"Running in environment: {os.getenv('FLASK_ENV', 'production')}")
 
-        return jsonify({'result': analysis_result})
+        # Analysis
+        try:
+            analysis_result = analyze_image_with_gpt4(image_data)
+            if not analysis_result:
+                return jsonify({'error': 'Analysis produced no results'}), 500
+            return jsonify({'result': analysis_result})
+        except ValueError as e:
+            print(f"Analysis value error: {str(e)}")
+            return jsonify({'error': str(e)}), 400
+        except Exception as e:
+            print(f"Analysis unexpected error: {type(e).__name__}: {str(e)}")
+            return jsonify({'error': 'Analysis failed unexpectedly', 'details': str(e)}), 500
 
     except Exception as e:
-        print(f"Error in analyze_food: {str(e)}")  # Detailed error logging
-        return jsonify({'error': str(e)}), 500
+        print(f"Request handling error: {type(e).__name__}: {str(e)}")
+        return jsonify({
+            'error': 'Server error',
+            'type': type(e).__name__,
+            'details': str(e)
+        }), 500
 
 @app.errorhandler(Exception)
 def handle_error(error):
@@ -213,8 +174,12 @@ def handle_error(error):
 
 @app.before_request
 def log_request_info():
-    print('Headers:', dict(request.headers))
-    print('Body:', request.get_data().decode())
+    print("=== Request Information ===")
+    print(f"Request Method: {request.method}")
+    print(f"Request URL: {request.url}")
+    print(f"Request Headers: {dict(request.headers)}")
+    print(f"Request Environment: {request.environ.get('SERVER_SOFTWARE', 'Unknown')}")
+    print("=========================")
 
 @app.after_request
 def after_request(response):
@@ -224,5 +189,14 @@ def after_request(response):
     return response
 
 if __name__ == '__main__':
+    # Add startup logging
+    print("=== Server Starting ===")
+    print(f"Python version: {sys.version}")
+    print(f"Flask version: {Flask.__version__}")
+    print(f"OpenAI version: {openai.__version__}")
+    print(f"Environment: {os.getenv('FLASK_ENV', 'production')}")
+    print(f"Debug mode: {app.debug}")
+    print("====================")
+    
     port = int(os.environ.get('PORT', 3000))
     app.run(host='0.0.0.0', port=port, debug=False) 
