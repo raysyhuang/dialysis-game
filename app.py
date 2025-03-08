@@ -41,6 +41,9 @@ def serve_static(path):
 
 def analyze_image_with_gpt4(image_base64):
     try:
+        # Initialize OpenAI client properly
+        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        
         # Decode base64 image
         if 'base64,' in image_base64:
             image_base64 = image_base64.split('base64,')[1]
