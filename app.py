@@ -120,8 +120,8 @@ def analyze_image_with_gpt4(image_base64):
         ]
 
         # Make API call to OpenAI
-        response = openai.chat.completions.create(
-            model="gpt-4o",
+        response = client.chat.completions.create(
+            model="gpt-4-vision-preview",
             messages=messages,
             max_tokens=1500
         )
