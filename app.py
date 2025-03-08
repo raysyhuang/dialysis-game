@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import base64
 import os
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 from PIL import Image
 import io
@@ -30,6 +30,15 @@ app.config.update(
     PROPAGATE_EXCEPTIONS=True  # This will help with error logging
 )
 
+# Configure OpenAI client
+api_key = os.getenv('OPENAI_API_KEY')
+if not api_key:
+    raise ValueError("OpenAI API key not found! Please set OPENAI_API_KEY environment variable.")
+print("OpenAI API key found and loaded successfully")
+
+# Create the client instance
+client = OpenAI(api_key=api_key)
+
 @app.route('/')
 def home():
     return send_from_directory('.', 'index.html')
@@ -37,14 +46,6 @@ def home():
 @app.route('/<path:path>')
 def serve_static(path):
     return send_from_directory('.', path)
-
-# Configure OpenAI
-api_key = os.getenv('OPENAI_API_KEY')
-if not api_key:
-    raise ValueError("OpenAI API key not found! Please set OPENAI_API_KEY environment variable.")
-print("OpenAI API key found and loaded successfully")
-
-openai.api_key = api_key
 
 def analyze_image_with_gpt4(image_base64):
     try:
@@ -124,8 +125,8 @@ def analyze_image_with_gpt4(image_base64):
         ]
 
         # Make API call to OpenAI
-        response = openai.chat.completions.create(
-            model="gpt-4o",
+        response = client.chat.completions.create(
+            model="gpt-4-vision-preview",
             messages=messages,
             max_tokens=1000
         )
