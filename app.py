@@ -44,7 +44,11 @@ print("OpenAI API key found and loaded successfully")
 # response = openai.ChatCompletion.create(...)
 
 # New way (v1.x+) - requires client initialization
-client = OpenAI(api_key=api_key)
+client = OpenAI(
+    api_key=api_key,
+    # Remove any proxy configurations if not needed
+    # proxies={...}  # ← Remove this line if present
+)
 
 def analyze_image_with_gpt4(image_base64):
     try:
