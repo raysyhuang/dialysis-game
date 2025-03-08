@@ -216,6 +216,14 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
-# if __name__ == '__main__':
-#     port = int(os.environ.get('PORT', 0))
-#     app.run(host='0.0.0.0', port=port, debug=False) 
+if __name__ == '__main__':
+    # Get environment variables with defaults
+    env = os.getenv('FLASK_ENV', 'development')
+    port = int(os.getenv('PORT', 3000))
+    debug = env == 'development'
+    
+    app.run(
+        host='0.0.0.0',
+        port=port,
+        debug=debug
+    ) 

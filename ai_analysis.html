@@ -657,8 +657,11 @@
                 loading.style.display = 'block';
                 analysisSection.style.display = 'none';
 
+                // Get the base URL dynamically
+                const baseUrl = window.location.origin;
+                
                 // Send request to server for analysis
-                const response = await fetch('/analyze', {
+                const response = await fetch(`${baseUrl}/analyze`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -873,7 +876,8 @@
 
         async function analyzeImage(imageData) {
             try {
-                const response = await fetch('/analyze', {
+                const baseUrl = window.location.origin;
+                const response = await fetch(`${baseUrl}/analyze`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
