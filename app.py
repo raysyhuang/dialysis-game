@@ -36,12 +36,14 @@ def serve_static(path):
     return send_from_directory('.', path)
 
 # Configure OpenAI
-api_key = os.getenv('OPENAI_API_KEY')
-if not api_key:
-    raise ValueError("OpenAI API key not found! Please set OPENAI_API_KEY environment variable.")
-print("OpenAI API key found and loaded successfully")
-
-openai.api_key = api_key
+try:
+    client = openai.OpenAI(
+        api_key=os.getenv('OPENAI_API_KEY')
+    )
+    print("OpenAI client initialized successfully")
+except Exception as e:
+    print(f"Error initializing OpenAI client: {str(e)}")
+    raise
 
 def analyze_image_with_gpt4(image_base64):
     try:
@@ -70,8 +72,8 @@ def analyze_image_with_gpt4(image_base64):
 
         # OpenAI API call with better error handling
         try:
-            response = openai.chat.completions.create(
-                model="gpt-4-vision-preview",  # Make sure this is the correct model name
+            response = client.chat.completions.create(
+                model="gpt-4o",
                 messages=messages,
                 max_tokens=1500
             )
@@ -200,7 +202,7 @@ def analyze_food():
             }), 400
 
         # 6. Validate OpenAI API key
-        if not openai.api_key:
+        if not client.api_key:
             print("OpenAI API key not configured")
             return jsonify({
                 'error': 'Server configuration error',
