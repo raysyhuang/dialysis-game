@@ -12,13 +12,18 @@ import json
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={
-    r"/*": {  # Allow all routes
-        "origins": "*",  # Allow all origins
-        "methods": ["GET", "POST", "OPTIONS"],  # Allow specific methods
-        "allow_headers": ["Content-Type"]  # Allow specific headers
-    }
-})
+CORS(app)
+
+# Serve static files properly
+app.static_folder = 'static'
+app.static_url_path = ''
+
+# Production configuration
+app.config.update(
+    ENV='production',
+    DEBUG=False,
+    PROPAGATE_EXCEPTIONS=True  # This will help with error logging
+)
 
 @app.route('/')
 def home():
