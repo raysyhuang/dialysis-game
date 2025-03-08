@@ -2,20 +2,14 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import base64
 import os
-from openai import OpenAI
 import openai
 from dotenv import load_dotenv
 from PIL import Image
 import io
 import json
-import logging
 
 # Load environment variables
 load_dotenv()
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
@@ -39,11 +33,16 @@ def home():
 def serve_static(path):
     return send_from_directory('.', path)
 
+# Configure OpenAI
+api_key = os.getenv('OPENAI_API_KEY')
+if not api_key:
+    raise ValueError("OpenAI API key not found! Please set OPENAI_API_KEY environment variable.")
+print("OpenAI API key found and loaded successfully")
+
+openai.api_key = api_key
+
 def analyze_image_with_gpt4(image_base64):
     try:
-        # Initialize OpenAI client properly
-        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        
         # Decode base64 image
         if 'base64,' in image_base64:
             image_base64 = image_base64.split('base64,')[1]
@@ -123,7 +122,7 @@ def analyze_image_with_gpt4(image_base64):
         response = openai.chat.completions.create(
             model="gpt-4o",
             messages=messages,
-            max_tokens=1500
+            max_tokens=1000
         )
         
         print("OpenAI Response:", response)  # Debug log
@@ -168,32 +167,32 @@ def health_check():
 
 @app.route('/analyze', methods=['POST'])
 def analyze_food():
-    logger.info("Received POST request to /analyze")
     try:
+        print("Received analyze request")
         if not request.is_json:
-            logger.error("Request does not contain JSON data")
-            return jsonify({'error': 'Content-Type must be application/json'}), 400
-
+            print("Request is not JSON")
+            return jsonify({'error': '请求格式错误'}), 400
+            
         data = request.get_json()
-        logger.info("Processing request data")
+        print("Received request data:", data.keys())
         
         if not data or 'image' not in data:
-            logger.error("No image in request")
+            print("No image in request")
             return jsonify({'error': '未提供图片数据'}), 400
 
         # Add debug logging
-        logger.info("Starting image analysis...")
+        print("Starting image analysis...")
         analysis_result = analyze_image_with_gpt4(data['image'])
-        logger.info("Analysis result:", analysis_result)  # Add this line
+        print("Analysis result:", analysis_result)  # Add this line
         
         if not analysis_result:
-            logger.error("Analysis returned None")
+            print("Analysis returned None")
             return jsonify({'error': '图片分析失败'}), 500
 
         return jsonify({'result': analysis_result})
 
     except Exception as e:
-        logger.error(f"Error processing request: {str(e)}")
+        print(f"Error in analyze_food: {str(e)}")  # Detailed error logging
         return jsonify({'error': str(e)}), 500
 
 @app.errorhandler(Exception)
@@ -217,13 +216,5 @@ def after_request(response):
     return response
 
 if __name__ == '__main__':
-    # Get environment variables with defaults
-    env = os.getenv('FLASK_ENV', 'development')
-    port = int(os.getenv('PORT', 3000))
-    debug = env == 'development'
-    
-    app.run(
-        host='0.0.0.0',
-        port=port,
-        debug=debug
-    ) 
+    port = int(os.environ.get('PORT', 3000))
+    app.run(host='0.0.0.0', port=port, debug=False) 
