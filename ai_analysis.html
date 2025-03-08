@@ -652,49 +652,62 @@
 
         async function analyzeFood(file) {
             try {
-                validateFile(file);
+                const base64Image = await getBase64(file);
+                
                 loading.style.display = 'block';
                 analysisSection.style.display = 'none';
+
+                // Send request to server for analysis
+                const response = await fetch('http://localhost:3003/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors',
+                    body: JSON.stringify({
+                        image: base64Image,
+                        timestamp: new Date().getTime()
+                    })
+                });
+
+                console.log('Server response status:', response.status);
                 
-                // Simulate server delay
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                // 使用模拟数据 - 汉堡包的分析结果
-                const mockData = {
-                    result: {
-                        foods: ['汉堡包', '生菜', '番茄', '洋葱'],
-                        basicNutrition: {
-                            calories: { value: 550, unit: 'kcal' },
-                            protein: { value: 25, unit: 'g' },
-                            fat: { value: 30, unit: 'g' },
-                            carbs: { value: 45, unit: 'g' }
-                        },
-                        dialysisIndicators: {
-                            sodium: { value: 850, unit: 'mg', level: '高', warning: true },
-                            potassium: { value: 450, unit: 'mg', level: '中', warning: false },
-                            phosphorus: { value: 280, unit: 'mg', level: '中', warning: false }
-                        },
-                        suggestions: [
-                            '建议减少食用频率，高钠含量不适合透析患者',
-                            '可以去掉部分面包减少碳水摄入',
-                            '可以增加生菜等低钾蔬菜的比例'
-                        ],
-                        tips: [
-                            '快餐食品通常含有较高的钠和磷',
-                            '建议选择更健康的蛋白质来源',
-                            '可以考虑自制汉堡以控制调味料用量'
-                        ]
-                    }
-                };
-                
-                updateAnalysisDisplay(mockData.result);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server error response:', errorText);
+                    throw new Error(`服务器错误: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Server response data:', data);
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (!data.result) {
+                    throw new Error('分析结果为空');
+                }
+
+                clearAnalysisDisplay();
+                updateAnalysisDisplay(data.result);
                 analysisSection.style.display = 'block';
+
             } catch (error) {
                 console.error('Analysis error:', error);
-                displayError(`分析失败: ${error.message}`);
+                displayError(error.message || '分析失败，请重试');
+                analysisSection.style.display = 'block';
             } finally {
                 loading.style.display = 'none';
             }
+        }
+
+        function clearAnalysisDisplay() {
+            document.getElementById('foodTags').innerHTML = '';
+            document.getElementById('basicNutrition').innerHTML = '';
+            document.getElementById('dialysisIndicators').innerHTML = '';
+            document.getElementById('suggestions').innerHTML = '';
+            document.getElementById('tips').innerHTML = '';
         }
 
         // Improve base64 conversion
@@ -857,49 +870,6 @@
             };
             return labels[key] || key;
         }
-
-        // Add this temporary mock data for testing
-        function getMockAnalysisData() {
-            return {
-                foods: ['米饭', '青菜'],
-                basicNutrition: {
-                    calories: { value: 250, unit: 'kcal' },
-                    protein: { value: 8, unit: 'g' },
-                    fat: { value: 3, unit: 'g' },
-                    carbs: { value: 45, unit: 'g' }
-                },
-                dialysisIndicators: {
-                    sodium: { value: 400, unit: 'mg', level: '中', warning: false },
-                    potassium: { value: 200, unit: 'mg', level: '低', warning: false },
-                    phosphorus: { value: 150, unit: 'mg', level: '低', warning: false }
-                },
-                suggestions: ['建议适量食用', '注意控制钠的摄入'],
-                tips: ['每餐要有适量的蛋白质', '建议多吃新鲜蔬菜']
-            };
-        }
-
-        // For testing purposes, you can temporarily modify analyzeFood to use mock data:
-        /*
-        async function analyzeFood(file) {
-            try {
-                validateFile(file);
-                loading.style.display = 'block';
-                analysisSection.style.display = 'none';
-                
-                // Simulate server delay
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                const mockData = getMockAnalysisData();
-                updateAnalysisDisplay(mockData);
-                analysisSection.style.display = 'block';
-            } catch (error) {
-                console.error('Analysis error:', error);
-                displayError(`分析失败: ${error.message}`);
-            } finally {
-                loading.style.display = 'none';
-            }
-        }
-        */
     </script>
 </body>
 </html>

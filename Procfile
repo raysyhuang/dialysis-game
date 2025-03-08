@@ -1,1 +1,1 @@
-web: gunicorn food_analyzer:app 
+web: python app.py 

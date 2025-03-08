@@ -18,9 +18,9 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Allow up to 16MB uploads
 # Configure CORS properly
 CORS(app, resources={
     r"/*": {
-        "origins": "*",
+        "origins": ["http://localhost:3000", "http://localhost:5000", "http://127.0.0.1:5000", "null"],  # Add your origins
         "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
+        "allow_headers": ["Content-Type", "Cache-Control", "Pragma"]
     }
 })
 
@@ -35,7 +35,8 @@ def serve_static(path):
 # Configure OpenAI
 api_key = os.getenv('OPENAI_API_KEY')
 if not api_key:
-    raise ValueError("OpenAI API key not found!")
+    raise ValueError("OpenAI API key not found! Please set OPENAI_API_KEY environment variable.")
+print("OpenAI API key found and loaded successfully")
 
 openai.api_key = api_key
 
@@ -60,51 +61,49 @@ def analyze_image_with_gpt4(image_base64):
                 "content": [
                     {
                         "type": "text",
-                        "text": """请仔细分析这张食物营养成分表图片。特别注意：
-1. 如果营养成分表中明确显示数值为0，请使用该值而不是忽略
-2. 请仔细查看所有营养值，包括钠、钾、磷等透析相关指标
-3. 如果某项营养成分有标注NRV%，也请一并提取
+                        "text": """请分析这张食物图片，并提供详细的营养分析。请特别关注：
+1. 识别图片中的具体食物
+2. 估算营养成分
+3. 评估对透析患者的影响
+4. 提供具体的饮食建议
 
 请按照以下JSON格式返回（只返回JSON，不要其他文字）：
 {
-    "foods": ["食物1", "食物2"],
+    "foods": ["具体食物名称"],
     "basicNutrition": {
-        "calories": {"value": 0, "unit": "千卡", "nrv": null},
-        "protein": {"value": 0, "unit": "g", "nrv": null},
-        "fat": {"value": 0, "unit": "g", "nrv": null},
-        "carbs": {"value": 0, "unit": "g", "nrv": null}
+        "calories": {"value": 0, "unit": "kcal"},
+        "protein": {"value": 0, "unit": "g"},
+        "fat": {"value": 0, "unit": "g"},
+        "carbs": {"value": 0, "unit": "g"}
     },
     "dialysisIndicators": {
         "sodium": {
             "value": 0,
             "unit": "mg",
-            "level": "低",
-            "warning": false,
-            "nrv": null
+            "level": "低/中/高",
+            "warning": false
         },
         "potassium": {
             "value": 0,
             "unit": "mg",
-            "level": "低",
-            "warning": false,
-            "nrv": null
+            "level": "低/中/高",
+            "warning": false
         },
         "phosphorus": {
             "value": 0,
             "unit": "mg",
-            "level": "低",
-            "warning": false,
-            "nrv": null
+            "level": "低/中/高",
+            "warning": false
         }
     },
     "suggestions": [
-        "建议1",
-        "建议2",
-        "建议3"
+        "针对该食物的具体建议1",
+        "针对该食物的具体建议2",
+        "针对该食物的具体建议3"
     ],
     "tips": [
-        "提示1",
-        "提示2"
+        "健康提示1",
+        "健康提示2"
     ]
 }"""
                     },
@@ -120,10 +119,9 @@ def analyze_image_with_gpt4(image_base64):
 
         # Make API call to OpenAI
         response = openai.chat.completions.create(
-            model="gpt-4o",  # Correct model name
+            model="gpt-4o",
             messages=messages,
-            max_tokens=1000,  # Increased token limit
-            temperature=0.7
+            max_tokens=1000
         )
         
         print("OpenAI Response:", response)  # Debug log
@@ -169,12 +167,13 @@ def health_check():
 @app.route('/analyze', methods=['POST'])
 def analyze_food():
     try:
+        print("Received analyze request")  # Debug log
         if not request.is_json:
             print("Request is not JSON")
             return jsonify({'error': '请求格式错误'}), 400
             
         data = request.get_json()
-        print("Received request data type:", type(data))
+        print("Received request data:", data.keys())  # Debug log
         
         if not data or 'image' not in data:
             print("No image in request")
@@ -188,7 +187,14 @@ def analyze_food():
         if len(data['image']) > 10 * 1024 * 1024:  # 10MB limit
             return jsonify({'error': '图片太大'}), 413
 
+        print("Analyzing image...")  # Debug log
         analysis_result = analyze_image_with_gpt4(data['image'])
+        print("Analysis complete")  # Debug log
+        
+        if not analysis_result:
+            print("No analysis result")
+            return jsonify({'error': '图片分析失败'}), 500
+
         return jsonify({'result': analysis_result})
 
     except Exception as e:
@@ -207,6 +213,13 @@ def handle_error(error):
 def log_request_info():
     print('Headers:', dict(request.headers))
     print('Body:', request.get_data().decode())
+
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Cache-Control,Pragma')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3003))
