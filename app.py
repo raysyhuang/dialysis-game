@@ -7,9 +7,14 @@ from dotenv import load_dotenv
 from PIL import Image
 import io
 import json
+import logging
 
 # Load environment variables
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
@@ -167,32 +172,32 @@ def health_check():
 
 @app.route('/analyze', methods=['POST'])
 def analyze_food():
+    logger.info("Received POST request to /analyze")
     try:
-        print("Received analyze request")
         if not request.is_json:
-            print("Request is not JSON")
-            return jsonify({'error': '请求格式错误'}), 400
-            
+            logger.error("Request does not contain JSON data")
+            return jsonify({'error': 'Content-Type must be application/json'}), 400
+
         data = request.get_json()
-        print("Received request data:", data.keys())
+        logger.info("Processing request data")
         
         if not data or 'image' not in data:
-            print("No image in request")
+            logger.error("No image in request")
             return jsonify({'error': '未提供图片数据'}), 400
 
         # Add debug logging
-        print("Starting image analysis...")
+        logger.info("Starting image analysis...")
         analysis_result = analyze_image_with_gpt4(data['image'])
-        print("Analysis result:", analysis_result)  # Add this line
+        logger.info("Analysis result:", analysis_result)  # Add this line
         
         if not analysis_result:
-            print("Analysis returned None")
+            logger.error("Analysis returned None")
             return jsonify({'error': '图片分析失败'}), 500
 
         return jsonify({'result': analysis_result})
 
     except Exception as e:
-        print(f"Error in analyze_food: {str(e)}")  # Detailed error logging
+        logger.error(f"Error processing request: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.errorhandler(Exception)
