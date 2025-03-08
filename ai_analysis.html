@@ -658,7 +658,7 @@
                 analysisSection.style.display = 'none';
 
                 // Send request to server for analysis
-                const response = await fetch('/analyze', {
+                const response = await fetch('analyze', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -873,7 +873,7 @@
 
         async function analyzeImage(imageData) {
             try {
-                const response = await fetch('/analyze', {
+                const response = await fetch('analyze', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
