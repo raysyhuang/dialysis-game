@@ -70,48 +70,97 @@ def analyze_image_with_gpt4(image_base64):
         except Exception as e:
             raise ValueError(f"Image processing failed: {str(e)}")
 
-        # OpenAI API call with better error handling
+        # Prepare the messages for the API call
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": """请分析这张食物图片，并提供详细的营养分析。请特别关注：
+1. 识别图片中的具体食物
+2. 估算营养成分
+3. 评估对透析患者的影响
+4. 提供具体的饮食建议
+
+请按照以下JSON格式返回（只返回JSON，不要其他文字）：
+{
+    "foods": ["具体食物名称"],
+    "basicNutrition": {
+        "calories": {"value": 0, "unit": "kcal"},
+        "protein": {"value": 0, "unit": "g"},
+        "fat": {"value": 0, "unit": "g"},
+        "carbs": {"value": 0, "unit": "g"}
+    },
+    "dialysisIndicators": {
+        "sodium": {
+            "value": 0,
+            "unit": "mg",
+            "level": "低/中/高",
+            "warning": false
+        },
+        "potassium": {
+            "value": 0,
+            "unit": "mg",
+            "level": "低/中/高",
+            "warning": false
+        },
+        "phosphorus": {
+            "value": 0,
+            "unit": "mg",
+            "level": "低/中/高",
+            "warning": false
+        }
+    },
+    "suggestions": [
+        "针对该食物的具体建议1",
+        "针对该食物的具体建议2",
+        "针对该食物的具体建议3"
+    ],
+    "tips": [
+        "健康提示1",
+        "健康提示2"
+    ]
+}"""
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64.b64encode(image_data).decode('utf-8')}"
+                        }
+                    }
+                ]
+            }
+        ]
+
         try:
+            # Make API call with the defined messages
             response = client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4-vision-preview",
                 messages=messages,
                 max_tokens=1500
             )
             print(f"OpenAI API response status: {response.model_dump()}")
+            
+            result = response.choices[0].message.content if response.choices else None
+            
+            # Parse JSON response
+            if result:
+                try:
+                    # Find JSON content between curly braces
+                    json_str = result[result.find('{'):result.rfind('}')+1]
+                    data = json.loads(json_str)
+                    return data
+                except json.JSONDecodeError as e:
+                    print(f"JSON parsing error: {e}")
+                    raise ValueError(f"Failed to parse OpenAI response: {str(e)}")
+            else:
+                raise ValueError("No response content from OpenAI")
+                
         except openai.APIError as e:
             raise ValueError(f"OpenAI API error: {str(e)}")
         except Exception as e:
             raise ValueError(f"OpenAI request failed: {str(e)}")
-
-        result = response.choices[0].message.content if response.choices else None
-        
-        # Parse JSON response
-        if result:
-            try:
-                # Find JSON content between curly braces
-                json_str = result[result.find('{'):result.rfind('}')+1]
-                data = json.loads(json_str)
-                return data
-            except json.JSONDecodeError as e:
-                print(f"JSON parsing error: {e}")
-                # Return a default structure if parsing fails
-                return {
-                    "foods": ["未能识别食物"],
-                    "basicNutrition": {
-                        "calories": {"value": 0, "unit": "千卡", "nrv": None},
-                        "protein": {"value": 0, "unit": "g", "nrv": None},
-                        "fat": {"value": 0, "unit": "g", "nrv": None},
-                        "carbs": {"value": 0, "unit": "g", "nrv": None}
-                    },
-                    "dialysisIndicators": {
-                        "sodium": {"value": 0, "unit": "mg", "level": "低", "warning": False, "nrv": None},
-                        "potassium": {"value": 0, "unit": "mg", "level": "低", "warning": False, "nrv": None},
-                        "phosphorus": {"value": 0, "unit": "mg", "level": "低", "warning": False, "nrv": None}
-                    },
-                    "suggestions": ["请重新尝试分析"],
-                    "tips": ["请重新尝试分析"]
-                }
-        return None
 
     except Exception as e:
         print(f"Detailed analysis error: {type(e).__name__}: {str(e)}")
