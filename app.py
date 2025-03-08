@@ -120,8 +120,8 @@ def analyze_image_with_gpt4(image_base64):
         ]
 
         # Make API call to OpenAI
-        response = client.chat.completions.create(
-            model="gpt-4-vision-preview",
+        response = openai.chat.completions.create(
+            model="gpt-4o",
             messages=messages,
             max_tokens=1500
         )
@@ -216,6 +216,6 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 3003))
-    app.run(host='0.0.0.0', port=port, debug=False) 
+# if __name__ == '__main__':
+#     port = int(os.environ.get('PORT', 0))
+#     app.run(host='0.0.0.0', port=port, debug=False) 
