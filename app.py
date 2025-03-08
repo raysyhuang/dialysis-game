@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import base64
 import os
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 from PIL import Image
 import io
@@ -39,7 +39,12 @@ if not api_key:
     raise ValueError("OpenAI API key not found! Please set OPENAI_API_KEY environment variable.")
 print("OpenAI API key found and loaded successfully")
 
-openai.api_key = api_key
+# Old way (v0.x) - works with older versions
+# openai.api_key = api_key
+# response = openai.ChatCompletion.create(...)
+
+# New way (v1.x+) - requires client initialization
+client = OpenAI(api_key=api_key)
 
 def analyze_image_with_gpt4(image_base64):
     try:
@@ -119,7 +124,7 @@ def analyze_image_with_gpt4(image_base64):
         ]
 
         # Make API call to OpenAI
-        response = openai.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-4o",
             messages=messages,
             max_tokens=1000
