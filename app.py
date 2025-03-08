@@ -8,6 +8,7 @@ from PIL import Image
 import io
 import json
 import sys
+import datetime
 
 # Load environment variables
 load_dotenv()
@@ -122,39 +123,123 @@ def health_check():
 def analyze_food():
     try:
         print("=== Starting new analysis request ===")
-        print(f"Request content type: {request.content_type}")
         
-        # Validate request format
+        # 1. Validate Content-Type
         if not request.is_json:
-            return jsonify({'error': 'Content-Type must be application/json'}), 400
+            print(f"Invalid content type: {request.content_type}")
+            return jsonify({
+                'error': 'Invalid request format',
+                'details': 'Content-Type must be application/json'
+            }), 400
             
-        data = request.get_json()
+        # 2. Validate request body
+        try:
+            data = request.get_json()
+        except Exception as e:
+            print(f"JSON parsing error: {str(e)}")
+            return jsonify({
+                'error': 'Invalid JSON format',
+                'details': str(e)
+            }), 400
+
         print(f"Request data keys: {data.keys() if data else 'None'}")
         
-        # Validate image data
-        if not data or 'image' not in data:
-            return jsonify({'error': 'Missing image data in request'}), 400
+        # 3. Validate image data presence and format
+        if not data:
+            return jsonify({
+                'error': 'Empty request body',
+                'details': 'Request body cannot be empty'
+            }), 400
+            
+        if 'image' not in data:
+            return jsonify({
+                'error': 'Missing image data',
+                'details': 'Request must include "image" field'
+            }), 400
             
         image_data = data['image']
+        
+        # 4. Validate image data format
         if not isinstance(image_data, str):
-            return jsonify({'error': 'Image data must be a base64 string'}), 400
+            return jsonify({
+                'error': 'Invalid image data type',
+                'details': 'Image data must be a base64 string'
+            }), 400
+            
+        # 5. Validate base64 format
+        try:
+            # Check if it's a data URL
+            if 'base64,' in image_data:
+                # Validate data URL format
+                parts = image_data.split('base64,')
+                if len(parts) != 2 or not parts[0].startswith('data:'):
+                    raise ValueError("Invalid data URL format")
+                base64_str = parts[1]
+            else:
+                base64_str = image_data
+                
+            # Try to decode base64
+            image_bytes = base64.b64decode(base64_str)
+            
+            # Validate minimum image size
+            if len(image_bytes) < 100:  # Arbitrary minimum size
+                raise ValueError("Image data too small")
+                
+            # Try to open image to validate format
+            try:
+                with Image.open(io.BytesIO(image_bytes)) as img:
+                    print(f"Valid image detected: format={img.format}, size={img.size}")
+            except Exception as e:
+                raise ValueError(f"Invalid image format: {str(e)}")
+                
+        except Exception as e:
+            print(f"Image validation error: {str(e)}")
+            return jsonify({
+                'error': 'Invalid image data',
+                'details': str(e)
+            }), 400
 
-        # Environment check
-        print(f"OpenAI API Key configured: {'Yes' if openai.api_key else 'No'}")
-        print(f"Running in environment: {os.getenv('FLASK_ENV', 'production')}")
+        # 6. Validate OpenAI API key
+        if not openai.api_key:
+            print("OpenAI API key not configured")
+            return jsonify({
+                'error': 'Server configuration error',
+                'details': 'OpenAI API key not configured'
+            }), 500
 
-        # Analysis
+        # If all validation passes, proceed with analysis
         try:
             analysis_result = analyze_image_with_gpt4(image_data)
             if not analysis_result:
-                return jsonify({'error': 'Analysis produced no results'}), 500
+                return jsonify({
+                    'error': 'Analysis failed',
+                    'details': 'No results produced'
+                }), 500
+                
+            # Validate analysis result structure
+            required_keys = ['foods', 'basicNutrition', 'dialysisIndicators', 'suggestions', 'tips']
+            missing_keys = [key for key in required_keys if key not in analysis_result]
+            if missing_keys:
+                print(f"Invalid analysis result structure. Missing keys: {missing_keys}")
+                return jsonify({
+                    'error': 'Invalid analysis result',
+                    'details': f'Missing required fields: {", ".join(missing_keys)}'
+                }), 500
+                
             return jsonify({'result': analysis_result})
+            
         except ValueError as e:
             print(f"Analysis value error: {str(e)}")
-            return jsonify({'error': str(e)}), 400
+            return jsonify({
+                'error': 'Analysis error',
+                'details': str(e)
+            }), 400
         except Exception as e:
             print(f"Analysis unexpected error: {type(e).__name__}: {str(e)}")
-            return jsonify({'error': 'Analysis failed unexpectedly', 'details': str(e)}), 500
+            return jsonify({
+                'error': 'Server error',
+                'details': str(e)
+            }), 500
 
     except Exception as e:
         print(f"Request handling error: {type(e).__name__}: {str(e)}")
@@ -174,12 +259,14 @@ def handle_error(error):
 
 @app.before_request
 def log_request_info():
-    print("=== Request Information ===")
-    print(f"Request Method: {request.method}")
-    print(f"Request URL: {request.url}")
-    print(f"Request Headers: {dict(request.headers)}")
-    print(f"Request Environment: {request.environ.get('SERVER_SOFTWARE', 'Unknown')}")
-    print("=========================")
+    print("\n=== Request Information ===")
+    print(f"Time: {datetime.datetime.now()}")
+    print(f"Method: {request.method}")
+    print(f"Path: {request.path}")
+    print(f"Headers: {dict(request.headers)}")
+    print(f"Content-Type: {request.content_type}")
+    print(f"Content-Length: {request.content_length}")
+    print("=========================\n")
 
 @app.after_request
 def after_request(response):
