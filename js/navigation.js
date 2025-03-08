@@ -59,4 +59,14 @@ style.textContent = `
 document.head.appendChild(style);
 
 // Update navigation when DOM is loaded
-document.addEventListener('DOMContentLoaded', updateNavigationLinks); 
+document.addEventListener('DOMContentLoaded', updateNavigationLinks);
+
+// This should be dynamic based on environment
+const API_URL = window.location.origin + '/analyze';  // This is better than hardcoding
+
+// When making the fetch request
+fetch(API_URL, {
+    method: 'POST',
+    body: formData,
+    // ... other options
+}) 
