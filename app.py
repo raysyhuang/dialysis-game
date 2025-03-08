@@ -215,6 +215,6 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
-# if __name__ == '__main__':
-#     port = int(os.environ.get('PORT', 3000))
-#     app.run(host='0.0.0.0', port=port, debug=False) 
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 3000))
+    app.run(host='0.0.0.0', port=port, debug=False) 
