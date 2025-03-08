@@ -43,6 +43,11 @@ openai.api_key = api_key
 
 def analyze_image_with_gpt4(image_base64):
     try:
+        # Check image size
+        image_size = len(image_base64) * 3/4  # Approximate size of decoded base64
+        if image_size > 20 * 1024 * 1024:  # 20MB limit
+            raise ValueError("图片太大，请压缩后重试")
+
         # Decode base64 image
         if 'base64,' in image_base64:
             image_base64 = image_base64.split('base64,')[1]
@@ -157,6 +162,9 @@ def analyze_image_with_gpt4(image_base64):
                 }
         return None
 
+    except MemoryError:
+        print("Memory error occurred during image processing")
+        raise ValueError("服务器内存不足，请稍后重试或使用较小的图片")
     except Exception as e:
         print(f"Analysis error: {str(e)}")
         raise ValueError(f"图片分析错误: {str(e)}")
