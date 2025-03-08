@@ -11,16 +11,12 @@ import json
 # Load environment variables
 load_dotenv()
 
-# Initialize Flask app
-app = Flask(__name__, static_folder='.')
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Allow up to 16MB uploads
-
-# Configure CORS properly
+app = Flask(__name__)
 CORS(app, resources={
-    r"/*": {
-        "origins": ["http://localhost:3000", "http://localhost:5000", "http://127.0.0.1:5000", "null"],  # Add your origins
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Cache-Control", "Pragma"]
+    r"/*": {  # Allow all routes
+        "origins": "*",  # Allow all origins
+        "methods": ["GET", "POST", "OPTIONS"],  # Allow specific methods
+        "allow_headers": ["Content-Type"]  # Allow specific headers
     }
 })
 
