@@ -870,6 +870,35 @@
             };
             return labels[key] || key;
         }
+
+        async function analyzeImage(imageData) {
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ image: imageData })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '分析失败');
+                }
+                
+                const data = await response.json();
+                if (!data.result) {
+                    throw new Error('没有分析结果');
+                }
+                
+                // Display the results
+                displayResults(data.result);
+            } catch (error) {
+                console.error('Analysis error:', error);
+                // Show error to user
+                document.getElementById('error-message').textContent = error.message;
+            }
+        }
     </script>
 </body>
 </html>
