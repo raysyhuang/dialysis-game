@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自我数据管理</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #6988b8;
+            --accent: #8cc3ff;
+            --background: #f8fafc;
+            --card: #ffffff;
+            --text: #333333;
+            --light-text: #666666;
+            --border: #e4e9f0;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --system-gray: #8E8E93;
+            --system-green: #34C759;
+            --system-red: #FF3B30;
+            --system-orange: #FF9F0A;
+            --system-blue: #007AFF;
+            --system-background: #FFFFFF;
+            --card-background: #F2F2F7;
+            --text-primary: #000000;
+            --text-secondary: #6C6C70;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            font-family: -apple-system, "SF Pro SC", "SF Pro Text", "SF Pro Icons",
+                "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 12px;
+            background: var(--system-background);
+            color: var(--text-primary);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        .user-info {
+            text-align: right;
+        }
+        
+        .username {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .last-dialysis {
+            font-size: 14px;
+            color: var(--light-text);
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 900px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background-color: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: var(--accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .card-content {
+            margin-bottom: 15px;
+        }
+        
+        .card-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .card-reference {
+            font-size: 14px;
+            color: var(--light-text);
+        }
+        
+        .status-good {
+            color: var(--success);
+        }
+        
+        .status-warning {
+            color: var(--warning);
+        }
+        
+        .status-alert {
+            color: var(--danger);
+        }
+        
+        .card-footer {
+            font-size: 14px;
+            color: var(--light-text);
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+        }
+        
+        .trend {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .trend-up {
+            color: var(--danger);
+        }
+        
+        .trend-down {
+            color: var(--success);
+        }
+        
+        .trend-stable {
+            color: var(--light-text);
+        }
+        
+        .chart-container {
+            background-color: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .chart-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chart-button {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            color: var(--light-text);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .chart-button.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .chart-button:hover:not(.active) {
+            background-color: var(--border);
+        }
+        
+        .chart {
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light-text);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(to right, var(--accent), var(--primary));
+            opacity: 0.1;
+            clip-path: polygon(0 80%, 10% 75%, 20% 85%, 30% 70%, 40% 75%, 50% 60%, 60% 65%, 70% 50%, 80% 55%, 90% 45%, 100% 50%, 100% 100%, 0 100%);
+        }
+        
+        .next-dialysis {
+            background-color: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .next-dialysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .next-dialysis-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .next-dialysis-date {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        .next-dialysis-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .next-dialysis-info {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .info-label {
+            font-size: 14px;
+            color: var(--light-text);
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 20px;
+            background-color: var(--background);
+            border-radius: 8px;
+            padding: 5px;
+        }
+        
+        .nav-tab {
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .nav-tab.active {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .nav-tab:not(.active):hover {
+            background-color: var(--border);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        thead {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        th, td {
+            padding: 15px 20px;
+            text-align: left;
+        }
+        
+        tr:not(:last-child) {
+            border-bottom: 1px solid var(--border);
+        }
+        
+        tbody tr:hover {
+            background-color: var(--background);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-normal {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+        
+        .status-attention {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: var(--warning);
+        }
+        
+        .status-critical {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: var(--danger);
+        }
+        
+        .tab-content {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .placeholder-text {
+            text-align: center;
+            color: var(--light-text);
+            padding: 40px;
+        }
+        
+        #trendsChart {
+            width: 100%;
+            height: 300px;
+        }
+
+        /* Add back button */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 44px;  /* Apple's minimum touch target size */
+            height: 44px;
+            border-radius: 50%;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border: none;
+            color: #333;
+        }
+
+        /* Update header styles */
+        .game-header {
+            text-align: center;
+            padding: 20px;
+            animation: fadeIn 0.5s ease-out;
+            margin-top: 40px;
+        }
+
+        .game-header h1 {
+            font-size: 34px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(120deg, var(--system-blue), var(--system-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 17px;
+            margin-top: 8px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .game-header h1 {
+                font-size: 28px;
+            }
+
+            .subtitle {
+                font-size: 15px;
+            }
+
+            .back-button {
+                position: static;
+                margin-bottom: 20px;
+                width: 100%;
+                border-radius: 12px;
+                height: 44px;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+</head>
+<body>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <button onclick="window.location.href='index.html'" class="back-button">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <div class="game-header">
+        <h1>透析健康助手</h1>
+        <p class="subtitle">实时监测您的透析指标，科学管理健康状况</p>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="user-profile">
+                <div class="user-info">
+                    <div class="username">王重阳</div>
+                    <div class="last-dialysis">上次透析: 2024年9月30日</div>
+                </div>
+                <div class="avatar">王</div>
+            </div>
+        </header>
+        
+        <section class="dashboard">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">超滤量</div>
+                    <div class="card-icon">💧</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-value status-good">2.7 L</div>
+                    <div class="card-reference">参考范围: 体重增长的70-100%</div>
+                </div>
+                <div class="card-footer">
+                    <div>平均超滤量: 2.5 L</div>
+                    <div class="trend trend-stable">
+                        <span>↔</span>
+                        <span>稳定</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">血红蛋白</div>
+                    <div class="card-icon">🩸</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-value status-warning">106 g/L</div>
+                    <div class="card-reference">目标范围: 100-120 g/L</div>
+                </div>
+                <div class="card-footer">
+                    <div>铁蛋白: 520 ng/mL</div>
+                    <div class="trend trend-up">
+                        <span>↑</span>
+                        <span>需补铁</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">钾离子</div>
+                    <div class="card-icon">⚡</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-value status-good">4.08 mmol/L</div>
+                    <div class="card-reference">目标范围: 3.5-5.0 mmol/L</div>
+                </div>
+                <div class="card-footer">
+                    <div>饮食控制良好</div>
+                    <div class="trend trend-stable">
+                        <span>↔</span>
+                        <span>稳定</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">钙离子</div>
+                    <div class="card-icon">🦴</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-value status-warning">2.02 mmol/L</div>
+                    <div class="card-reference">目标范围: 2.1-2.4 mmol/L</div>
+                </div>
+                <div class="card-footer">
+                    <div>钙磷乘积: 43.51</div>
+                    <div class="trend trend-down">
+                        <span>↓</span>
+                        <span>需关注</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">磷酸盐</div>
+                    <div class="card-icon">🔬</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-value status-warning">1.78 mmol/L</div>
+                    <div class="card-reference">目标范围: 1.13-1.78 mmol/L</div>
+                </div>
+                <div class="card-footer">
+                    <div>需控制饮食</div>
+                    <div class="trend trend-up">
+                        <span>↑</span>
+                        <span>偏高</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">尿素氮</div>
+                    <div class="card-icon">🧪</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-value status-attention">34.8 mmol/L</div>
+                    <div class="card-reference">透析后: 10.1 mmol/L</div>
+                </div>
+                <div class="card-footer">
+                    <div>清除率良好</div>
+                    <div class="trend trend-good">
+                        <span>✓</span>
+                        <span>达标</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title">透析效果趋势</div>
+                <div class="chart-controls">
+                    <button class="chart-button" onclick="updateChartPeriod('week')">周</button>
+                    <button class="chart-button active" onclick="updateChartPeriod('month')">月</button>
+                    <button class="chart-button" onclick="updateChartPeriod('quarter')">3个月</button>
+                    <button class="chart-button" onclick="updateChartPeriod('year')">年</button>
+                </div>
+            </div>
+            <div class="chart">
+                <canvas id="trendsChart"></canvas>
+            </div>
+        </section>
+        
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="showTab('lab')">生化指标</div>
+            <div class="nav-tab" onclick="showTab('treatment')">透析记录</div>
+            <div class="nav-tab" onclick="showTab('medication')">用药记录</div>
+            <div class="nav-tab" onclick="showTab('diet')">饮食建议</div>
+        </div>
+        
+        <div id="labContent" class="tab-content active">
+            <table>
+                <thead>
+                    <tr>
+                        <th>检测项目</th>
+                        <th>最新结果</th>
+                        <th>参考范围</th>
+                        <th>状态</th>
+                        <th>建议</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>血红蛋白 (Hb)</td>
+                        <td>106 g/L</td>
+                        <td>100-120 g/L</td>
+                        <td><span class="status-badge status-normal">达标</span></td>
+                        <td>继续ESA治疗</td>
+                    </tr>
+                    <tr>
+                        <td>白蛋白 (Alb)</td>
+                        <td>38.4 g/L</td>
+                        <td>≥40 g/L</td>
+                        <td><span class="status-badge status-attention">需改善</span></td>
+                        <td>增加优质蛋白摄入</td>
+                    </tr>
+                    <tr>
+                        <td>钾离子 (K+)</td>
+                        <td>4.08 mmol/L</td>
+                        <td>3.5-5.0 mmol/L</td>
+                        <td><span class="status-badge status-normal">正常</span></td>
+                        <td>继续保持</td>
+                    </tr>
+                    <tr>
+                        <td>钠离子 (Na+)</td>
+                        <td>140.13 mmol/L</td>
+                        <td>135-145 mmol/L</td>
+                        <td><span class="status-badge status-normal">正常</span></td>
+                        <td>继续保持</td>
+                    </tr>
+                    <tr>
+                        <td>钙离子 (Ca++)</td>
+                        <td>2.02 mmol/L</td>
+                        <td>2.1-2.4 mmol/L</td>
+                        <td><span class="status-badge status-attention">偏低</span></td>
+                        <td>遵医嘱补充</td>
+                    </tr>
+                    <tr>
+                        <td>磷酸盐 (P)</td>
+                        <td>1.78 mmol/L</td>
+                        <td>1.13-1.78 mmol/L</td>
+                        <td><span class="status-badge status-attention">上限</span></td>
+                        <td>注意控制饮食</td>
+                    </tr>
+                    <tr>
+                        <td>铁蛋白</td>
+                        <td>520 ng/mL</td>
+                        <td>200-800 ng/mL</td>
+                        <td><span class="status-badge status-normal">正常</span></td>
+                        <td>定期复查</td>
+                    </tr>
+                    <tr>
+                        <td>转铁蛋白饱和度</td>
+                        <td>40.9%</td>
+                        <td>≥20%</td>
+                        <td><span class="status-badge status-normal">达标</span></td>
+                        <td>铁状态良好</td>
+                    </tr>
+                    <tr>
+                        <td>PTH</td>
+                        <td>未提供</td>
+                        <td>130-585 pg/mL</td>
+                        <td><span class="status-badge status-attention">待检查</span></td>
+                        <td>建议复查</td>
+                    </tr>
+                    <tr>
+                        <td>尿素氮 (BUN)</td>
+                        <td>34.8 → 10.1 mmol/L</td>
+                        <td>透析后 < 15</td>
+                        <td><span class="status-badge status-normal">达标</span></td>
+                        <td>透析充分</td>
+                    </tr>
+                    <tr>
+                        <td>肌酐 (Cr)</td>
+                        <td>1305.3 → 501.38 μmol/L</td>
+                        <td>透析后 < 600</td>
+                        <td><span class="status-badge status-normal">达标</span></td>
+                        <td>清除良好</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="treatmentContent" class="tab-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>透析前体重</th>
+                        <th>透析后体重</th>
+                        <th>体重变化</th>
+                        <th>超滤量</th>
+                        <th>血压(前/后)</th>
+                        <th>透析时长</th>
+                    </tr>
+                </thead>
+                <tbody id="treatmentTableBody">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="medicationContent" class="tab-content">
+            <p class="placeholder-text">用药记录功能开发中...</p>
+        </div>
+        
+        <div id="dietContent" class="tab-content">
+            <p class="placeholder-text">饮食建议功能开发中...</p>
+        </div>
+    </div>
+    
+    <script>
+    const treatmentData = [
+        // This is sample data structure - you'll need to populate this from your backend
+        {
+            date: '2024-09-30',
+            preWeight: 56.60,
+            postWeight: 54.20,
+            weightChange: 2.40,
+            uf: 2.6,
+            preBP: '138/84',
+            postBP: '133/93',
+            duration: 4.0
+        },
+        // ... more data entries
+    ];
+
+    // Initialize the trends chart
+    function initTrendsChart() {
+        const ctx = document.getElementById('trendsChart').getContext('2d');
+        const dates = treatmentData.map(d => d.date);
+        const weights = treatmentData.map(d => d.preWeight);
+        const uf = treatmentData.map(d => d.uf);
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: '透析前体重',
+                        data: weights,
+                        borderColor: '#4a6fa5',
+                        tension: 0.4
+                    },
+                    {
+                        label: '超滤量',
+                        data: uf,
+                        borderColor: '#8cc3ff',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Tab switching functionality
+    function showTab(tabName) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        // Remove active class from all tabs
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show selected tab content
+        document.getElementById(tabName + 'Content').classList.add('active');
+        
+        // Add active class to selected tab
+        event.target.classList.add('active');
+    }
+
+    // Populate treatment records table
+    function populateTreatmentTable() {
+        const tbody = document.getElementById('treatmentTableBody');
+        tbody.innerHTML = treatmentData.map(record => `
+            <tr>
+                <td>${record.date}</td>
+                <td>${record.preWeight} kg</td>
+                <td>${record.postWeight} kg</td>
+                <td>${record.weightChange} kg</td>
+                <td>${record.uf} L</td>
+                <td>${record.preBP} → ${record.postBP}</td>
+                <td>${record.duration} 小时</td>
+            </tr>
+        `).join('');
+    }
+
+    // Chart period update functionality
+    function updateChartPeriod(period) {
+        // Remove active class from all buttons
+        document.querySelectorAll('.chart-button').forEach(button => {
+            button.classList.remove('active');
+        });
+        
+        // Add active class to clicked button
+        event.target.classList.add('active');
+        
+        // Filter data based on selected period
+        let filteredData;
+        switch(period) {
+            case 'week':
+                filteredData = treatmentData.slice(-3); // Last 3 treatments
+                break;
+            case 'month':
+                filteredData = treatmentData.slice(-13); // Last 13 treatments
+                break;
+            case 'quarter':
+                filteredData = treatmentData; // All available data
+                break;
+            case 'year':
+                filteredData = treatmentData; // All available data
+                break;
+        }
+        
+        // Update chart with filtered data
+        // You'll need to implement this based on your chart library
+    }
+
+    // Initialize everything when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        initTrendsChart();
+        populateTreatmentTable();
+    });
+
+    // Function to process CSV data
+    function processTreatmentData(csvData) {
+        return csvData
+            .filter(record => record.Patient === '王重阳')
+            .map(record => ({
+                date: record.Date,
+                preWeight: parseFloat(record['Pre-Weight']),
+                postWeight: parseFloat(record['Post-Weight']),
+                weightChange: parseFloat(record['Weight Change']),
+                uf: parseFloat(record['Actual UF']),
+                preBP: record['Pre-BP'],
+                postBP: record['Post-BP'],
+                duration: parseFloat(record['Dialysis Duration'])
+            }))
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
+
+    // Function to format dates to local format
+    function formatDate(dateString) {
+        return new Date(dateString).toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+    </script>
+</body>
+</html>
