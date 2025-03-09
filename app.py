@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 from PIL import Image
 import io
 import json
+import traceback
+import httpx
 
 # Load environment variables
 load_dotenv()
@@ -15,14 +17,15 @@ app = Flask(__name__)
 CORS(app)
 
 # Serve static files properly
-app.static_folder = 'static'
+app.static_folder = '.'
 app.static_url_path = ''
 
 # Production configuration
 app.config.update(
     ENV='production',
-    DEBUG=False,
-    PROPAGATE_EXCEPTIONS=True  # This will help with error logging
+    DEBUG=True,  # Temporarily enable debug for troubleshooting
+    PROPAGATE_EXCEPTIONS=True,
+    SEND_FILE_MAX_AGE_DEFAULT=0  # Disable caching during development
 )
 
 @app.route('/')
@@ -31,7 +34,11 @@ def home():
 
 @app.route('/<path:path>')
 def serve_static(path):
-    return send_from_directory('.', path)
+    try:
+        return send_from_directory('.', path)
+    except Exception as e:
+        print(f"Error serving {path}: {str(e)}")
+        return str(e), 404
 
 # Configure OpenAI
 api_key = os.getenv('OPENAI_API_KEY')
@@ -39,7 +46,14 @@ if not api_key:
     raise ValueError("OpenAI API key not found! Please set OPENAI_API_KEY environment variable.")
 print("OpenAI API key found and loaded successfully")
 
-openai.api_key = api_key
+# Set OpenAI API key as environment variable
+os.environ["OPENAI_API_KEY"] = api_key
+
+# Clear any proxy settings that might interfere with the OpenAI client
+if 'http_proxy' in os.environ:
+    del os.environ['http_proxy']
+if 'https_proxy' in os.environ:
+    del os.environ['https_proxy']
 
 def analyze_image_with_gpt4(image_base64):
     try:
@@ -56,13 +70,22 @@ def analyze_image_with_gpt4(image_base64):
             image.save(img_byte_arr, format='JPEG')
             image_data = img_byte_arr.getvalue()
         
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": """请分析这张食物图片，并提供详细的营养分析。请特别关注：
+        # Create headers with API key
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        # Prepare the request payload
+        payload = {
+            "model": "gpt-4o",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": """请分析这张食物图片，并提供详细的营养分析。请特别关注：
 1. 识别图片中的具体食物
 2. 估算营养成分
 3. 评估对透析患者的影响
@@ -107,27 +130,32 @@ def analyze_image_with_gpt4(image_base64):
         "健康提示2"
     ]
 }"""
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{base64.b64encode(image_data).decode('utf-8')}"
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64.b64encode(image_data).decode('utf-8')}"
+                            }
                         }
-                    }
-                ]
-            }
-        ]
-
-        # Make API call to OpenAI
-        response = openai.chat.completions.create(
-            model="gpt-4o",
-            messages=messages,
-            max_tokens=1000
-        )
+                    ]
+                }
+            ],
+            "max_tokens": 1000
+        }
         
-        print("OpenAI Response:", response)  # Debug log
+        # Make the API request
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers=headers,
+                json=payload
+            )
+            response.raise_for_status()
+            response_data = response.json()
         
-        result = response.choices[0].message.content if response.choices else None
+        print("OpenAI Response:", response_data)  # Debug log
+        
+        result = response_data['choices'][0]['message']['content'] if response_data['choices'] else None
         
         # Parse JSON response
         if result:
@@ -138,19 +166,20 @@ def analyze_image_with_gpt4(image_base64):
                 return data
             except json.JSONDecodeError as e:
                 print(f"JSON parsing error: {e}")
+                print(f"Raw response: {result}")  # Add raw response logging
                 # Return a default structure if parsing fails
                 return {
                     "foods": ["未能识别食物"],
                     "basicNutrition": {
-                        "calories": {"value": 0, "unit": "千卡", "nrv": None},
-                        "protein": {"value": 0, "unit": "g", "nrv": None},
-                        "fat": {"value": 0, "unit": "g", "nrv": None},
-                        "carbs": {"value": 0, "unit": "g", "nrv": None}
+                        "calories": {"value": 0, "unit": "千卡"},
+                        "protein": {"value": 0, "unit": "g"},
+                        "fat": {"value": 0, "unit": "g"},
+                        "carbs": {"value": 0, "unit": "g"}
                     },
                     "dialysisIndicators": {
-                        "sodium": {"value": 0, "unit": "mg", "level": "低", "warning": False, "nrv": None},
-                        "potassium": {"value": 0, "unit": "mg", "level": "低", "warning": False, "nrv": None},
-                        "phosphorus": {"value": 0, "unit": "mg", "level": "低", "warning": False, "nrv": None}
+                        "sodium": {"value": 0, "unit": "mg", "level": "低", "warning": False},
+                        "potassium": {"value": 0, "unit": "mg", "level": "低", "warning": False},
+                        "phosphorus": {"value": 0, "unit": "mg", "level": "低", "warning": False}
                     },
                     "suggestions": ["请重新尝试分析"],
                     "tips": ["请重新尝试分析"]
@@ -159,6 +188,7 @@ def analyze_image_with_gpt4(image_base64):
 
     except Exception as e:
         print(f"Analysis error: {str(e)}")
+        print(f"Full traceback: {traceback.format_exc()}")  # Add full traceback
         raise ValueError(f"图片分析错误: {str(e)}")
 
 @app.route('/health', methods=['GET'])
