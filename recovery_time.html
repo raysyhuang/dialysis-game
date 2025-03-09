@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>透析后恢复时间调查</title>
+    <style>
+        :root {
+            --primary: #1976d2;
+            --primary-light: #e3f2fd;
+            --secondary: #2e7d32;
+            --danger: #d32f2f;
+            --text-dark: #212121;
+            --text-medium: #5f6368;
+            --background: #f5f5f5;
+            --border: #e0e0e0;
+            --shadow: 0 2px 10px rgba(0,0,0,0.08);
+            --radius: 8px;
+            --font: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+            --system-gray: #8E8E93;
+            --system-green: #34C759;
+            --system-red: #FF3B30;
+            --system-orange: #FF9F0A;
+            --system-blue: #007AFF;
+            --system-background: #FFFFFF;
+            --card-background: #F2F2F7;
+            --text-primary: #000000;
+            --text-secondary: #6C6C70;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        body {
+            background-color: var(--system-background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            font-size: 17px; /* Apple's recommended base font size */
+        }
+        
+        .survey-card {
+            background-color: var(--system-background);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 600px;
+            overflow: hidden;
+            margin-top: 20px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .survey-header {
+            background-color: var(--system-blue);
+            color: white;
+            padding: 24px; /* Increased padding for better touch targets */
+        }
+        
+        .survey-header h1 {
+            font-size: 24px; /* Increased for better readability */
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .survey-header p {
+            font-size: 17px;
+            opacity: 0.9;
+        }
+        
+        .survey-body {
+            padding: 32px;
+            background: linear-gradient(to bottom, var(--system-background), var(--card-background));
+        }
+        
+        .info-box {
+            background: rgba(0, 122, 255, 0.1);
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(0, 122, 255, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .info-box p {
+            font-size: 17px;
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin: 0;
+        }
+        
+        .question {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+            padding: 0 4px;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            min-height: 60px;
+            padding: 20px;
+            border: 1.5px solid var(--card-background);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--system-background);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .option:hover {
+            background-color: var(--card-background);
+            border-color: var(--system-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .option.selected {
+            background-color: rgba(0, 122, 255, 0.1);
+            border-color: var(--system-blue);
+            box-shadow: 0 4px 12px rgba(0,122,255,0.12);
+        }
+        
+        .radio {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid var(--text-secondary);
+            margin-right: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            background-color: var(--system-background);
+        }
+        
+        .option:hover .radio {
+            border-color: var(--system-blue);
+        }
+        
+        .option.selected .radio {
+            border-color: var(--system-blue);
+            background-color: var(--system-background);
+        }
+        
+        .option.selected .radio::after {
+            content: "";
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: var(--system-blue);
+            animation: scaleIn 0.2s ease;
+        }
+        
+        .option-text {
+            font-size: 17px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .submit-button {
+            background: linear-gradient(135deg, var(--system-blue), #5856D6);
+            color: white;
+            border: none;
+            padding: 18px 32px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            margin-top: 32px;
+            transition: all 0.3s ease;
+            min-height: 60px;
+            box-shadow: 0 4px 12px rgba(0,122,255,0.2);
+        }
+        
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,122,255,0.3);
+        }
+        
+        .submit-button:disabled {
+            background: var(--system-gray);
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .result-section {
+            display: none;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .result-section.visible {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .message {
+            background: rgba(52, 199, 89, 0.1); /* Using system green with opacity */
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(52, 199, 89, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .message h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--system-green);
+        }
+        
+        .message p {
+            font-size: 17px;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        
+        .chart-section {
+            background: var(--system-background);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 32px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .chart-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+        }
+        
+        .chart-container {
+            height: 300px;
+            border: 1px solid var(--card-background);
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+            background: var(--card-background);
+            margin-bottom: 16px;
+        }
+        
+        .axis-labels {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 0;
+        }
+        
+        .axis-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: right;
+            padding-right: 16px;
+            transform: translateY(-50%);
+            font-weight: 500;
+        }
+        
+        .chart-grid {
+            position: absolute;
+            left: 100px;
+            top: 0;
+            right: 0;
+            height: 100%;
+        }
+        
+        .grid-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: rgba(0,0,0,0.1);
+        }
+        
+        .chart-data {
+            position: absolute;
+            left: 100px;
+            top: 0;
+            right: 0;
+            height: 100%;
+            padding: 20px 0;
+        }
+        
+        .data-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--system-background);
+            border: 2.5px solid var(--system-blue);
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .data-point:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: 0 0 10px rgba(0,122,255,0.3);
+        }
+        
+        .data-line {
+            position: absolute;
+            height: 2.5px;
+            background: linear-gradient(to right, var(--system-blue), #5856D6);
+            z-index: 1;
+            opacity: 0.8;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.2s ease;
+            z-index: 10;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        
+        .date-labels {
+            display: flex;
+            margin-top: 16px;
+            padding: 0 100px;
+        }
+        
+        .date-label {
+            flex: 1;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .resources {
+            margin-top: 32px;
+            padding: 24px;
+            background: var(--card-background);
+            border-radius: 16px;
+        }
+        
+        .resources a {
+            color: var(--system-blue);
+            text-decoration: none;
+            font-size: 17px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .resources a:hover {
+            background: var(--system-background);
+            transform: translateX(4px);
+        }
+        
+        .resources a::after {
+            content: "→";
+            font-size: 20px;
+            opacity: 0;
+            transform: translateX(-8px);
+            transition: all 0.3s ease;
+        }
+        
+        .resources a:hover::after {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .survey-header {
+                padding: 15px;
+            }
+            
+            .survey-body {
+                padding: 15px;
+            }
+            
+            .option {
+                padding: 10px 12px;
+            }
+        }
+        
+        .game-header {
+            text-align: center;
+            padding: 20px;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        h1 {
+            font-size: 34px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(120deg, var(--system-blue), var(--system-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 17px;
+            margin-top: 8px;
+        }
+        
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 44px; /* Apple's minimum touch target size */
+            height: 44px;
+            border-radius: 22px;
+            background-color: var(--system-background);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border: none;
+            color: var(--text-primary);
+        }
+        
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <button onclick="window.location.href='index.html'" class="back-button">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <div class="game-header">
+        <h1>透析后恢复时间调查</h1>
+        <p class="subtitle">您的反馈有助于改善患者护理质量！</p>
+    </div>
+
+    <div class="survey-card">
+
+        <div class="survey-body">
+            <div class="info-box">
+                <p>恢复时间与医疗安全、不良事件、住院率和死亡率相关。对于刚开始血液透析的新患者尤为重要。</p>
+            </div>
+            
+            <div class="question">
+                您需要多长时间从透析治疗中恢复？
+            </div>
+            
+            <div class="options" id="optionsContainer">
+                <div class="option" onclick="selectOption(0)">
+                    <div class="radio"></div>
+                    <span class="option-text">0小时（立即恢复）</span>
+                </div>
+                
+                <div class="option" onclick="selectOption(1)">
+                    <div class="radio"></div>
+                    <span class="option-text">0-2小时</span>
+                </div>
+                
+                <div class="option" onclick="selectOption(2)">
+                    <div class="radio"></div>
+                    <span class="option-text">2-6小时</span>
+                </div>
+                
+                <div class="option" onclick="selectOption(3)">
+                    <div class="radio"></div>
+                    <span class="option-text">6-12小时</span>
+                </div>
+                
+                <div class="option" onclick="selectOption(4)">
+                    <div class="radio"></div>
+                    <span class="option-text">超过12小时</span>
+                </div>
+            </div>
+            
+            <button id="submitButton" class="submit-button" onclick="submitResponse()" disabled>提交</button>
+            
+            <div id="resultSection" class="result-section">
+                <div class="message">
+                    <h3>感谢您的反馈</h3>
+                    <p id="feedbackMessage"></p>
+                </div>
+                
+                <div class="chart-section">
+                    <div class="chart-title">您的恢复时间趋势</div>
+                    
+                    <div class="chart-container">
+                        <div class="axis-labels" id="axisLabels"></div>
+                        <div class="chart-grid" id="chartGrid"></div>
+                        <div class="chart-data" id="chartData"></div>
+                        <div class="tooltip" id="tooltip"></div>
+                    </div>
+                    
+                    <div class="date-labels" id="dateLabels"></div>
+                </div>
+                
+                <div class="resources">
+                    <a href="#" onclick="event.preventDefault(); alert('这里将提供关于如何改善恢复时间的资源。');">了解更多关于改善恢复时间的信息</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 变量
+        let selectedOption = null;
+        const submitButton = document.getElementById('submitButton');
+        const resultSection = document.getElementById('resultSection');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        const tooltip = document.getElementById('tooltip');
+        
+        // 每个选项的恢复时间值（小时）
+        const recoveryHours = [0, 1, 4, 9, 15];
+        
+        // 历史数据样本
+        const historicalData = [
+            { date: "2月3日", value: 3 },    // 6-12小时
+            { date: "2月10日", value: 3 },   // 6-12小时
+            { date: "2月17日", value: 2 },   // 2-6小时
+            { date: "2月24日", value: 2 },   // 2-6小时
+            { date: "3月3日", value: 1 }     // 0-2小时
+        ];
+        
+        // 选择一个选项
+        function selectOption(index) {
+            const options = document.querySelectorAll('.option');
+            
+            // 清除之前的选择
+            options.forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 设置新的选择
+            options[index].classList.add('selected');
+            selectedOption = index;
+            
+            // 启用提交按钮
+            submitButton.disabled = false;
+        }
+        
+        // 提交回答
+        function submitResponse() {
+            if (selectedOption === null) return;
+            
+            // 显示结果部分
+            resultSection.classList.add('visible');
+            
+            // 根据选择设置反馈信息
+            const feedbacks = [
+                "您的即时恢复非常出色！这表明您的透析治疗非常适合您的需求。",
+                "您的快速恢复时间很好。这表明您的透析治疗对您很有效。",
+                "2-6小时的恢复时间比较常见。可能有机会改进您的治疗计划以减少这个时间。",
+                "较长的恢复时间可能会影响生活质量。您的医疗团队可能需要评估可以调整的治疗因素。",
+                "延长的恢复时间与更高的风险相关。重要的是与您的医疗服务提供者讨论以探索干预措施。"
+            ];
+            
+            feedbackMessage.textContent = feedbacks[selectedOption];
+            
+            // 将今天的回答添加到数据中
+            const today = new Date();
+            const month = today.getMonth() + 1;
+            const day = today.getDate();
+            const formattedDate = `${month}月${day}日`;
+            
+            const updatedData = [
+                ...historicalData, 
+                { date: formattedDate, value: selectedOption }
+            ];
+            
+            // 创建图表
+            createChart(updatedData);
+            
+            // 滚动到结果部分
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // 创建图表
+        function createChart(data) {
+            // 获取图表元素
+            const axisLabels = document.getElementById('axisLabels');
+            const chartGrid = document.getElementById('chartGrid');
+            const chartData = document.getElementById('chartData');
+            const dateLabels = document.getElementById('dateLabels');
+            
+            // 清除之前的内容
+            axisLabels.innerHTML = '';
+            chartGrid.innerHTML = '';
+            chartData.innerHTML = '';
+            dateLabels.innerHTML = '';
+            
+            // 创建Y轴标签
+            const categories = ['超过12小时', '6-12小时', '2-6小时', '0-2小时', '0小时'];
+            
+            categories.forEach((label, index) => {
+                // 创建标签
+                const labelElement = document.createElement('div');
+                labelElement.className = 'axis-label';
+                labelElement.textContent = label;
+                labelElement.style.top = `${index * 25}%`;
+                axisLabels.appendChild(labelElement);
+                
+                // 创建网格线
+                const gridLine = document.createElement('div');
+                gridLine.className = 'grid-line';
+                gridLine.style.top = `${index * 25}%`;
+                chartGrid.appendChild(gridLine);
+            });
+            
+            // 计算图表尺寸
+            const chartWidth = chartData.clientWidth;
+            const chartHeight = chartData.clientHeight;
+            const padding = { top: 10, bottom: 10 };
+            const usableHeight = chartHeight - padding.top - padding.bottom;
+            
+            // 计算点位置
+            const pointSpacing = chartWidth / (data.length - 1);
+            
+            // 创建日期标签
+            data.forEach((point, i) => {
+                const label = document.createElement('div');
+                label.className = 'date-label';
+                label.textContent = point.date;
+                dateLabels.appendChild(label);
+            });
+            
+            // 创建数据点和线
+            data.forEach((point, i) => {
+                const x = i * pointSpacing;
+                const y = padding.top + ((4 - point.value) / 4) * usableHeight;
+                
+                // 创建点
+                const pointElement = document.createElement('div');
+                pointElement.className = 'data-point';
+                pointElement.style.left = `${x}px`;
+                pointElement.style.top = `${y}px`;
+                
+                // 添加鼠标事件显示提示框
+                pointElement.addEventListener('mouseover', () => {
+                    const recoveryTime = categories[4 - point.value];
+                    tooltip.textContent = `${point.date}: ${recoveryTime}`;
+                    tooltip.style.opacity = '1';
+                    tooltip.style.left = `${x + 80}px`;
+                    tooltip.style.top = `${y - 25}px`;
+                });
+                
+                pointElement.addEventListener('mouseout', () => {
+                    tooltip.style.opacity = '0';
+                });
+                
+                chartData.appendChild(pointElement);
+                
+                // 创建连接下一个点的线
+                if (i < data.length - 1) {
+                    const nextPoint = data[i + 1];
+                    const nextX = (i + 1) * pointSpacing;
+                    const nextY = padding.top + ((4 - nextPoint.value) / 4) * usableHeight;
+                    
+                    // 计算线条尺寸
+                    const length = Math.sqrt(Math.pow(nextX - x, 2) + Math.pow(nextY - y, 2));
+                    const angle = Math.atan2(nextY - y, nextX - x) * 180 / Math.PI;
+                    
+                    const lineElement = document.createElement('div');
+                    lineElement.className = 'data-line';
+                    lineElement.style.width = `${length}px`;
+                    lineElement.style.left = `${x}px`;
+                    lineElement.style.top = `${y}px`;
+                    lineElement.style.transform = `rotate(${angle}deg)`;
+                    lineElement.style.transformOrigin = 'left center';
+                    
+                    chartData.appendChild(lineElement);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

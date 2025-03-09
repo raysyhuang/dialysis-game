@@ -118,13 +118,15 @@
         .card {
             background-color: var(--card);
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            padding: 20px;
-            transition: transform 0.3s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
         }
         
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
         .card-header {
@@ -135,9 +137,10 @@
         }
         
         .card-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--primary);
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: -0.022em;
         }
         
         .card-icon {
@@ -157,14 +160,16 @@
         }
         
         .card-value {
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 34px;
+            font-weight: 700;
             margin-bottom: 8px;
+            letter-spacing: -0.003em;
         }
         
         .card-reference {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--light-text);
+            letter-spacing: -0.016em;
         }
         
         .status-good {
@@ -180,12 +185,14 @@
         }
         
         .card-footer {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--light-text);
             display: flex;
             justify-content: space-between;
             border-top: 1px solid var(--border);
             padding-top: 12px;
+            margin-top: 16px;
+            letter-spacing: -0.016em;
         }
         
         .trend {
@@ -779,27 +786,55 @@
     </div>
     
     <script>
+    let currentAmount = 0;
+    let dailyLimit = 1000; // 默认值
+    let dryWeight = 0;
+    let fluidHistory = [];
+
+    // Treatment data
     const treatmentData = [
-        // This is sample data structure - you'll need to populate this from your backend
-        {
-            date: '2024-09-30',
-            preWeight: 56.60,
-            postWeight: 54.20,
-            weightChange: 2.40,
-            uf: 2.6,
-            preBP: '138/84',
-            postBP: '133/93',
-            duration: 4.0
-        },
-        // ... more data entries
+        {date: '09-02', preWeight: 58.3, postWeight: 54.8, weightChange: -3.5, uf: 3.8, preBP: '131/81', postBP: '148/96', duration: 4.0},
+        {date: '09-04', preWeight: 58.1, postWeight: 54.0, weightChange: -4.1, uf: 4.1, preBP: '129/74', postBP: '104/72', duration: 4.0},
+        {date: '09-06', preWeight: 57.8, postWeight: 54.1, weightChange: -3.7, uf: 3.8, preBP: '127/70', postBP: '108/75', duration: 4.0},
+        {date: '09-09', preWeight: 58.5, postWeight: 54.8, weightChange: -3.7, uf: 3.7, preBP: '127/78', postBP: '128/91', duration: 4.0},
+        {date: '09-11', preWeight: 57.2, postWeight: 53.9, weightChange: -3.3, uf: 3.3, preBP: '130/83', postBP: '110/82', duration: 4.0},
+        {date: '09-13', preWeight: 56.2, postWeight: 54.1, weightChange: -2.1, uf: 2.2, preBP: '103/68', postBP: '116/84', duration: 4.0},
+        {date: '09-16', preWeight: 59.0, postWeight: 54.9, weightChange: -4.1, uf: 4.0, preBP: '131/79', postBP: '117/84', duration: 4.0},
+        {date: '09-18', preWeight: 57.3, postWeight: 54.2, weightChange: -3.1, uf: 3.3, preBP: '122/82', postBP: '123/90', duration: 4.0},
+        {date: '09-20', preWeight: 56.3, postWeight: 53.9, weightChange: -2.4, uf: 2.3, preBP: '136/79', postBP: '119/87', duration: 4.0},
+        {date: '09-23', preWeight: 57.5, postWeight: 53.9, weightChange: -3.6, uf: 3.5, preBP: '135/83', postBP: '129/88', duration: 4.0},
+        {date: '09-25', preWeight: 57.2, postWeight: 54.1, weightChange: -3.1, uf: 3.2, preBP: '138/86', postBP: '114/86', duration: 4.0},
+        {date: '09-27', preWeight: 56.5, postWeight: 54.0, weightChange: -2.5, uf: 2.7, preBP: '130/86', postBP: '143/98', duration: 4.0},
+        {date: '09-30', preWeight: 56.6, postWeight: 54.2, weightChange: -2.4, uf: 2.6, preBP: '138/84', postBP: '133/93', duration: 4.0}
     ];
 
-    // Initialize the trends chart
+    function toggleSettings() {
+        const panel = document.getElementById('settingsPanel');
+        panel.classList.toggle('active');
+    }
+
+    // Populate treatment records table
+    function populateTreatmentTable() {
+        const tbody = document.getElementById('treatmentTableBody');
+        tbody.innerHTML = treatmentData.map(record => `
+            <tr>
+                <td>${record.date}</td>
+                <td>${record.preWeight.toFixed(1)} kg</td>
+                <td>${record.postWeight.toFixed(1)} kg</td>
+                <td>${record.weightChange.toFixed(1)} kg</td>
+                <td>${record.uf.toFixed(1)} L</td>
+                <td>${record.preBP} → ${record.postBP}</td>
+                <td>${record.duration.toFixed(1)} 小时</td>
+            </tr>
+        `).join('');
+    }
+
+    // Initialize the trends chart with treatment data
     function initTrendsChart() {
         const ctx = document.getElementById('trendsChart').getContext('2d');
         const dates = treatmentData.map(d => d.date);
-        const weights = treatmentData.map(d => d.preWeight);
-        const uf = treatmentData.map(d => d.uf);
+        const preWeights = treatmentData.map(d => d.preWeight);
+        const postWeights = treatmentData.map(d => d.postWeight);
 
         new Chart(ctx, {
             type: 'line',
@@ -808,15 +843,25 @@
                 datasets: [
                     {
                         label: '透析前体重',
-                        data: weights,
-                        borderColor: '#4a6fa5',
-                        tension: 0.4
+                        data: preWeights,
+                        borderColor: '#FF9F0A',
+                        backgroundColor: 'rgba(255, 159, 10, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.4,
+                        fill: false
                     },
                     {
-                        label: '超滤量',
-                        data: uf,
-                        borderColor: '#8cc3ff',
-                        tension: 0.4
+                        label: '透析后体重',
+                        data: postWeights,
+                        borderColor: '#30B0C7',
+                        backgroundColor: 'rgba(48, 176, 199, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.4,
+                        fill: false
                     }
                 ]
             },
@@ -825,13 +870,70 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'top'
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 13
+                            },
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        padding: 12,
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        titleColor: '#000',
+                        bodyColor: '#666',
+                        borderColor: '#ddd',
+                        borderWidth: 1,
+                        titleFont: {
+                            size: 14,
+                            weight: '600'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + ' kg';
+                            }
+                        }
                     }
                 },
                 scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
                     y: {
-                        beginAtZero: false
+                        beginAtZero: false,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            callback: function(value) {
+                                return value.toFixed(1) + ' kg';
+                            }
+                        }
                     }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
                 }
             }
         });
@@ -854,22 +956,6 @@
         
         // Add active class to selected tab
         event.target.classList.add('active');
-    }
-
-    // Populate treatment records table
-    function populateTreatmentTable() {
-        const tbody = document.getElementById('treatmentTableBody');
-        tbody.innerHTML = treatmentData.map(record => `
-            <tr>
-                <td>${record.date}</td>
-                <td>${record.preWeight} kg</td>
-                <td>${record.postWeight} kg</td>
-                <td>${record.weightChange} kg</td>
-                <td>${record.uf} L</td>
-                <td>${record.preBP} → ${record.postBP}</td>
-                <td>${record.duration} 小时</td>
-            </tr>
-        `).join('');
     }
 
     // Chart period update functionality
